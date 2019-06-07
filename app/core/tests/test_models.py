@@ -43,11 +43,6 @@ class UserManagerTests(TestCase):
         with self.assertRaises(ValueError):
             get_user_model().objects.create_user('test@test.com', None)
 
-    def test_create_user_short_password(self):
-        """Test that an error is raised if a new user has a short password."""
-        with self.assertRaises(ValueError):
-            get_user_model().objects.create_user('test@test.com', 'test')
-
     def test_create_superuser(self):
         """Test creating a new superuser."""
         user = get_user_model().objects.create_superuser(

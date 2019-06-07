@@ -13,9 +13,8 @@ class UserManager(BaseUserManager):
             validate_email(email)
         except ValidationError as ve:
             raise ve
-        if not password or len(password) < 5:
-            raise ValueError('''Enter a password that is at least
-                                5 characters long.''')
+        if not password:
+            raise ValueError('Enter a password.')
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
