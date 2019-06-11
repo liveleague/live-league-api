@@ -16,8 +16,6 @@ class UserManager(BaseUserManager):
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
-        contacts = Contact.objects.create(user=user)
-        contacts.save(using=self._db)
 
         return user
 
@@ -56,6 +54,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     Custom user model that uses an email address to log in.
     Supports the 'basic' user type as well as artists and promoters.
     """
+    # Main
     email = models.EmailField(max_length=255, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -63,25 +62,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_promoter = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
 
-    objects = UserManager()
-    USERNAME_FIELD = 'email'
-
-
-class Contact(models.Model):
-    """Collection of external links belonging to the user."""
+    # Contact
     facebook = models.URLField()
     instagram = models.URLField()
     phone = PhoneNumberField(blank=True)
     soundcloud = models.URLField()
     spotify = models.URLField()
     twitter = models.URLField()
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='contacts'
-    )
     website = models.URLField()
     youtube = models.URLField()
+
+    # Extra
+    objects = UserManager()
+    USERNAME_FIELD = 'email'
 
 
 class Artist(models.Model):
@@ -97,12 +90,12 @@ class Artist(models.Model):
 
 class Promoter(models.Model):
     """Promoter model. (better description needed)"""
+    is_verified = models.BooleanField(default=False)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='promoter'
     )
-    is_verified = models.BooleanField(default=False)
 
 
 class Venue(models.Model):

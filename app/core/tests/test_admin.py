@@ -26,12 +26,6 @@ class AdminSiteTests(TestCase):
         self.assertContains(res, self.user.email)
         self.assertContains(res, self.user.name)
 
-    def test_passwords_not_listed(self):
-        """Test that the passwords are not listed on the admin's user page."""
-        url = reverse('admin:core_user_changelist')
-        res = self.client.get(url)
-        self.assertNotContains(res, self.user.password)
-
     def test_edit_user_page(self):
         """Test that the admin's user edit page works."""
         url = reverse('admin:core_user_change', args=[self.user.id])
