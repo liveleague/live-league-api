@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'phonenumber_field',
     'core',
+    'table',
     'user',
 ]
 
