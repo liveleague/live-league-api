@@ -55,6 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     Supports the 'basic' user type as well as artists and promoters.
     """
     # Main
+    description = models.CharField(max_length=1000, blank=True)
     email = models.EmailField(max_length=255, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -63,14 +64,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=255)
 
     # Contact
-    facebook = models.URLField()
-    instagram = models.URLField()
+    facebook = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
     phone = PhoneNumberField(blank=True)
-    soundcloud = models.URLField()
-    spotify = models.URLField()
-    twitter = models.URLField()
-    website = models.URLField()
-    youtube = models.URLField()
+    soundcloud = models.URLField(blank=True)
+    spotify = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    website = models.URLField(blank=True)
+    youtube = models.URLField(blank=True)
 
     # Extra
     objects = UserManager()
@@ -79,7 +80,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Artist(models.Model):
     """Artist model. (better description needed)"""
-    description = models.CharField(max_length=1000)
     events = models.ManyToManyField('Event', related_name='artists')
     points = models.IntegerField()
     user = models.OneToOneField(
@@ -91,7 +91,6 @@ class Artist(models.Model):
 
 class Promoter(models.Model):
     """Promoter model. (better description needed)"""
-    description = models.CharField(max_length=1000)
     is_verified = models.BooleanField(default=False)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
