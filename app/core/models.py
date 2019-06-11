@@ -79,6 +79,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Artist(models.Model):
     """Artist model. (better description needed)"""
+    description = models.CharField(max_length=1000)
     events = models.ManyToManyField('Event', related_name='artists')
     points = models.IntegerField()
     user = models.OneToOneField(
@@ -90,6 +91,7 @@ class Artist(models.Model):
 
 class Promoter(models.Model):
     """Promoter model. (better description needed)"""
+    description = models.CharField(max_length=1000)
     is_verified = models.BooleanField(default=False)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
