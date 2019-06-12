@@ -8,9 +8,7 @@ from core import models
 class UserAdmin(BaseUserAdmin):
     ordering = ['id']
     list_display = ['email', 'name']
-    list_filter = [
-        'is_active', 'is_staff', 'is_superuser', 'is_artist', 'is_promoter'
-    ]
+    list_filter = ['is_active', 'is_staff', 'is_superuser']
     fieldsets = (
         (None, {'fields': ('email', 'password',)}),
         (_('Personal Info'), {'fields': ('name',)}),
@@ -36,8 +34,6 @@ class UserAdmin(BaseUserAdmin):
                     'is_active',
                     'is_staff',
                     'is_superuser',
-                    'is_artist',
-                    'is_promoter',
                 )
             }
         ),

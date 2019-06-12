@@ -3,8 +3,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-# from core.models import Artist
-
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for the user object."""
@@ -12,9 +10,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            'email', 'password', 'name', 'description', 'is_artist',
-            'is_promoter', 'facebook', 'instagram', 'phone', 'soundcloud',
-            'spotify', 'twitter', 'website', 'youtube'
+            'email', 'password', 'name', 'facebook', 'instagram', 'phone',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube'
         )
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
 
@@ -54,12 +51,3 @@ class AuthTokenSerializer(serializers.Serializer):
             raise serializers.ValidationError(msg, code='authorization')
         attrs['user'] = user
         return attrs
-
-
-'''
-class ArtistSerializer(serializers.ModelSerializer):
-    """Serializer for the user object."""
-
-    class Meta:
-        model = Artist()
-'''

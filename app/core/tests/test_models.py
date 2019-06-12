@@ -48,21 +48,27 @@ class UserManagerTests(TestCase):
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
 
+
+class ArtistManagerTests(TestCase):
+
     def test_create_artist(self):
         """Test creating a new artist."""
-        artist = get_user_model().objects.create_artist(
+        artist = models.Artist.objects.create_artist(
             email='test@test.com',
             password='testpass'
         )
-        self.assertTrue(artist.user.is_artist)
+        self.assertEqual(artist.points, 0)
+
+
+class PromoterManagerTests(TestCase):
 
     def test_create_promoter(self):
         """Test creating a new promoter."""
-        promoter = get_user_model().objects.create_promoter(
+        promoter = models.Promoter.objects.create_promoter(
             email='test@test.com',
             password='testpass'
         )
-        self.assertTrue(promoter.user.is_promoter)
+        self.assertEqual(promoter.points, 0)
 
 
 class StringRepresentationTests(TestCase):
@@ -82,7 +88,7 @@ class StringRepresentationTests(TestCase):
                 2019, 12, 31, 19, 0, 0, 0
             ).replace(tzinfo=pytz.utc),
             name='test event',
-            promoter=get_user_model().objects.create_promoter(
+            promoter=models.Promoter.objects.create_promoter(
                 email='test@test.com',
                 password='testpass'
             ),

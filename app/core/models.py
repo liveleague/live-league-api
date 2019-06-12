@@ -1,18 +1,22 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
-    PermissionsMixin
-from django.conf import settings
+     PermissionsMixin
 from phonenumber_field.modelfields import PhoneNumberField
+
+
+def signup_check(email, password):
+    """Helper function to check emails and passwords."""
+    if not email:
+        raise ValueError('Enter an email address.')
+    if not password:
+        raise ValueError('Enter a password.')
 
 
 class UserManager(BaseUserManager):
 
     def create_user(self, email, password, **extra_fields):
         """Creates and saves a new user."""
-        if not email:
-            raise ValueError('Enter an email address.')
-        if not password:
-            raise ValueError('Enter a password.')
+        signup_check(email, password)
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -28,25 +32,37 @@ class UserManager(BaseUserManager):
 
         return user
 
+
+class ArtistManager(BaseUserManager):
+
     def create_artist(self, email, password):
         """Creates and saves a new artist."""
-        user = self.create_user(email, password)
-        user.is_artist = True
-        user.save(using=self._db)
-        artist = Artist.objects.create(points=0, user=user)
+        signup_check(email, password)
+        artist = Artist.objects.create(
+            email=self.normalize_email(email), password=password
+        )
         artist.save(using=self._db)
 
         return artist
 
+
+class PromoterManager(BaseUserManager):
+
     def create_promoter(self, email, password):
         """Creates and saves a new promoter."""
-        user = self.create_user(email, password)
-        user.is_promoter = True
-        user.save(using=self._db)
-        promoter = Promoter.objects.create(user=user)
+        signup_check(email, password)
+        promoter = Promoter.objects.create(
+            email=self.normalize_email(email), password=password
+        )
         promoter.save(using=self._db)
 
         return promoter
+
+
+# class VenueManager(BaseUserManager):
+
+
+# class EventManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -55,12 +71,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     Supports the 'basic' user type as well as artists and promoters.
     """
     # Main
-    description = models.CharField(max_length=1000, blank=True)
     email = models.EmailField(max_length=255, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    is_artist = models.BooleanField(default=False)
-    is_promoter = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
 
     # Contact
@@ -73,30 +86,40 @@ class User(AbstractBaseUser, PermissionsMixin):
     website = models.URLField(blank=True)
     youtube = models.URLField(blank=True)
 
-    # Extra
-    objects = UserManager()
     USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name']
+    objects = UserManager()
+
+    def __str__(self):
+        return self.name
 
 
-class Artist(models.Model):
+class Artist(User, PermissionsMixin):
     """Artist model. (better description needed)"""
+    description = models.CharField(max_length=1000, blank=True)
     events = models.ManyToManyField('Event', related_name='artists')
-    points = models.IntegerField()
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='artist'
-    )
+    points = models.IntegerField(default=0)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name']
+    objects = ArtistManager()
+
+    def __str__(self):
+        return self.name
 
 
-class Promoter(models.Model):
+class Promoter(User, PermissionsMixin):
     """Promoter model. (better description needed)"""
+    description = models.CharField(max_length=1000, blank=True)
     is_verified = models.BooleanField(default=False)
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='promoter'
-    )
+    points = models.IntegerField(default=0)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name']
+    objects = PromoterManager()
+
+    def __str__(self):
+        return self.name
 
 
 class Venue(models.Model):

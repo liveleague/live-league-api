@@ -115,9 +115,6 @@ class PrivateUserApiTests(TestCase):
         self.assertEqual(res.data, {
             'email': self.user.email,
             'name': self.user.name,
-            'description': self.user.description,
-            'is_artist': self.user.is_artist,
-            'is_promoter': self.user.is_promoter,
             'facebook': self.user.facebook,
             'instagram': self.user.instagram,
             'phone': self.user.phone,
