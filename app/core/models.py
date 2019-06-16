@@ -20,7 +20,6 @@ class UserManager(BaseUserManager):
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
-
         return user
 
     def create_superuser(self, email, password):
@@ -29,33 +28,38 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
-
         return user
 
 
 class ArtistManager(BaseUserManager):
 
-    def create_artist(self, email, password):
+    def create_artist(self, email, password, name, **extra_fields):
         """Creates and saves a new artist."""
         signup_check(email, password)
+        if not name:
+            raise ValueError('Enter a name.')
         artist = Artist.objects.create(
-            email=self.normalize_email(email), password=password
+            email=self.normalize_email(email), name=name, **extra_fields
         )
+        artist.set_password(password)
+        artist.is_artist = True
         artist.save(using=self._db)
-
         return artist
 
 
 class PromoterManager(BaseUserManager):
 
-    def create_promoter(self, email, password):
+    def create_promoter(self, email, password, name, **extra_fields):
         """Creates and saves a new promoter."""
         signup_check(email, password)
+        if not name:
+            raise ValueError('Enter a name.')
         promoter = Promoter.objects.create(
-            email=self.normalize_email(email), password=password
+            email=self.normalize_email(email), name=name, **extra_fields
         )
+        promoter.set_password(password)
+        promoter.is_promoter = True
         promoter.save(using=self._db)
-
         return promoter
 
 
@@ -86,6 +90,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     website = models.URLField(blank=True)
     youtube = models.URLField(blank=True)
 
+    # Groups
+    is_artist = models.BooleanField(default=False)
+    is_promoter = models.BooleanField(default=False)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
     objects = UserManager()
@@ -97,7 +105,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Artist(User, PermissionsMixin):
     """Artist model. (better description needed)"""
     description = models.CharField(max_length=1000, blank=True)
-    events = models.ManyToManyField('Event', related_name='artists')
     points = models.IntegerField(default=0)
 
     USERNAME_FIELD = 'email'
@@ -134,6 +141,9 @@ class Venue(models.Model):
 
 class Event(models.Model):
     """Event model. (better description needed)"""
+    artists = models.ManyToManyField(
+        'Artist', related_name='events'
+    )
     description = models.CharField(max_length=1000)
     end_time = models.DateTimeField(auto_now=False, auto_now_add=False)
     name = models.CharField(max_length=255)

@@ -53,25 +53,125 @@ class ArtistManagerTests(TestCase):
 
     def test_create_artist(self):
         """Test creating a new artist."""
+        email = 'artist@test.com'
+        password = 'testpass'
         artist = models.Artist.objects.create_artist(
-            email='test@test.com',
-            password='testpass'
+            email=email,
+            password=password,
+            name='test artist'
         )
-        self.assertEqual(artist.points, 0)
+        self.assertEqual(artist.email, email)
+        self.assertTrue(artist.check_password(password))
+
+    def test_create_artist_email_normalized(self):
+        """Test that the email address for a new artist is normalized."""
+        email = 'artist@TEST.com'
+        artist = models.Artist.objects.create_artist(
+            email=email,
+            password='testpass',
+            name='test artist'
+        )
+        self.assertEqual(artist.email, email.lower())
+
+    def test_create_artist_without_email(self):
+        """
+        Test that an error is raised if a new artist has no email address.
+        """
+        with self.assertRaises(ValueError):
+            models.Artist.objects.create_artist(
+                None, 'testpass', 'test artist'
+            )
+
+    def test_create_artist_without_password(self):
+        """Test that an error is raised if a new artist has no password."""
+        with self.assertRaises(ValueError):
+            models.Artist.objects.create_artist(
+                'artist@test.com', None, 'test artist'
+            )
+
+    def test_create_artist_without_name(self):
+        """Test that an error is raised if a new artist has no name."""
+        with self.assertRaises(ValueError):
+            models.Artist.objects.create_artist(
+                'artist@test.com', 'testpass', None
+            )
 
 
 class PromoterManagerTests(TestCase):
 
     def test_create_promoter(self):
         """Test creating a new promoter."""
+        email = 'promoter@test.com'
+        password = 'testpass'
         promoter = models.Promoter.objects.create_promoter(
-            email='test@test.com',
-            password='testpass'
+            email=email,
+            password=password,
+            name='test promoter'
         )
-        self.assertEqual(promoter.points, 0)
+        self.assertEqual(promoter.email, email)
+        self.assertTrue(promoter.check_password(password))
+
+    def test_create_promoter_email_normalized(self):
+        """Test that the email address for a new promoter is normalized."""
+        email = 'promoter@TEST.com'
+        promoter = models.Promoter.objects.create_promoter(
+            email=email,
+            password='testpass',
+            name='test promoter'
+        )
+        self.assertEqual(promoter.email, email.lower())
+
+    def test_create_promoter_without_email(self):
+        """
+        Test that an error is raised if a new promoter has no email address.
+        """
+        with self.assertRaises(ValueError):
+            models.Promoter.objects.create_promoter(
+                None, 'testpass', 'test promoter'
+            )
+
+    def test_create_promoter_without_password(self):
+        """Test that an error is raised if a new promoter has no password."""
+        with self.assertRaises(ValueError):
+            models.Promoter.objects.create_promoter(
+                'promoter@test.com', None, 'test promoter'
+            )
+
+    def test_create_promoter_without_name(self):
+        """Test that an error is raised if a new promoter has no name."""
+        with self.assertRaises(ValueError):
+            models.Promoter.objects.create_promoter(
+                'promoter@test.com', 'testpass', None
+            )
 
 
 class StringRepresentationTests(TestCase):
+
+    def test_str_user(self):
+        """Test the string representation of the User model."""
+        user = get_user_model().objects.create_user(
+            email='test@test.com',
+            password='testpass'
+        )
+        self.assertEqual(str(user), user.name)
+
+    def test_str_artist(self):
+        """Test the string representation of the Artist model."""
+        artist = models.Artist.objects.create_artist(
+            email='artist@test.com',
+            password='testpass',
+            name='test artist'
+        )
+        self.assertEqual(str(artist), artist.name)
+
+    def test_str_promoter(self):
+        """Test the string representation of the Promoter model."""
+        promoter = models.Promoter.objects.create_promoter(
+            email='promoter@test.com',
+            password='testpass',
+            name='test promoter'
+        )
+        self.assertEqual(str(promoter), promoter.name)
 
     def test_str_venue(self):
         """Test the string representation of the Venue model."""
@@ -89,8 +189,9 @@ class StringRepresentationTests(TestCase):
             ).replace(tzinfo=pytz.utc),
             name='test event',
             promoter=models.Promoter.objects.create_promoter(
-                email='test@test.com',
-                password='testpass'
+                email='promoter@test.com',
+                password='testpass',
+                name='test promoter'
             ),
             venue=models.Venue.objects.create(name='test venue')
         )
