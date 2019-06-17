@@ -1,0 +1,11 @@
+1) Delete the spotify folder
+2) $ docker-compose run app sh -c "python manage.py startapp spotfy"
+
+This app creates and maintains spotify playlists featuring the artists in the league.
+
+Artists' total number of songs featured is based on their position in the league and the songs' popularity in spotify.
+
+Different playlists, e.g.:
+  - genres
+  - classics?
+  - etc.
