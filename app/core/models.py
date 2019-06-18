@@ -144,6 +144,9 @@ class Event(models.Model):
     artists = models.ManyToManyField(
         'Artist', related_name='events'
     )
+    # attendees = models.ManyToManyField(
+    #     'User', related_name='events',
+    # )
     description = models.CharField(max_length=1000)
     end_time = models.DateTimeField(auto_now=False, auto_now_add=False)
     name = models.CharField(max_length=255)
