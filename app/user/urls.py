@@ -26,12 +26,12 @@ urlpatterns = [
     ),
     path(
         'list/artists/',
-        views.ListPromoterView.as_view(),
+        views.ListArtistView.as_view(),
         name='list-artists'
     ),
     path(
         'list/promoters/',
-        views.ListArtistView.as_view(),
+        views.ListPromoterView.as_view(),
         name='list-promoters'
     ),
 ]

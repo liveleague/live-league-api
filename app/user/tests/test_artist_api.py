@@ -9,6 +9,8 @@ from core.models import Artist
 
 CREATE_ARTIST_URL = reverse('user:create-artist')
 ME_URL = reverse('user:me')
+RETRIEVE_ARTIST_URL = reverse('user:artist', kwargs={'slug': 'test-artist'})
+LIST_ARTISTS_URL = reverse('user:list-artists')
 
 
 def create_artist(**params):
@@ -39,7 +41,11 @@ class PublicArtistApiTests(TestCase):
         """
         Test that an error is raised if a new artist has a short password.
         """
-        payload = {'email': 'artist@test.com', 'password': 'test'}
+        payload = {
+            'email': 'artist@test.com',
+            'password': 'test',
+            'name': 'test artist'
+        }
         res = self.client.post(CREATE_ARTIST_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         artist_exists = Artist.objects.filter(
@@ -60,6 +66,57 @@ class PublicArtistApiTests(TestCase):
         create_artist(**payload)
         res = self.client.post(CREATE_ARTIST_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_artist(self):
+        """Test retrieving an artist."""
+        test_artist = {
+            'email': 'artist@test.com',
+            'password': 'testpass',
+            'name': 'test artist'
+        }
+        create_artist(**test_artist)
+        res = self.client.get(RETRIEVE_ARTIST_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('name', res.data)
+
+    def test_retrieve_artist_non_existent(self):
+        """Test retrieving an artist that doesn't exist."""
+        res = self.client.get(RETRIEVE_ARTIST_URL)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_retrieve_artist_hidden_fields(self):
+        """Test that certain fields are hidden when retrieving an artist."""
+        test_artist = {
+            'email': 'artist@test.com',
+            'password': 'testpass',
+            'name': 'test artist',
+            'phone': '+447546103437'
+        }
+        create_artist(**test_artist)
+        res = self.client.get(RETRIEVE_ARTIST_URL)
+        self.assertNotIn('email', res.data)
+        self.assertNotIn('password', res.data)
+        self.assertNotIn('phone', res.data)
+
+    def test_list_artists(self):
+        """Test that artists are listed."""
+        test_artist_1 = {
+            'email': 'artist1@test.com',
+            'password': 'testpass',
+            'name': 'test artist 1',
+            'phone': '+447546103437'
+        }
+        test_artist_2 = {
+            'email': 'artist2@test.com',
+            'password': 'testpass',
+            'name': 'test artist 2',
+            'phone': '+447546103438'
+        }
+        create_artist(**test_artist_1)
+        create_artist(**test_artist_2)
+        res = self.client.get(LIST_ARTISTS_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
 
 
 class PrivateArtistApiTests(TestCase):

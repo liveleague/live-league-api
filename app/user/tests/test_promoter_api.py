@@ -7,8 +7,12 @@ from rest_framework import status
 from core.models import Promoter
 
 
-CREATE_promoter_URL = reverse('user:create-promoter')
+CREATE_PROMOTER_URL = reverse('user:create-promoter')
 ME_URL = reverse('user:me')
+RETRIEVE_PROMOTER_URL = reverse(
+    'user:promoter', kwargs={'slug': 'test-promoter'}
+)
+LIST_PROMOTERS_URL = reverse('user:list-promoters')
 
 
 def create_promoter(**params):
@@ -29,7 +33,7 @@ class PublicpromoterApiTests(TestCase):
             'password': 'testpass',
             'name': 'test promoter',
         }
-        res = self.client.post(CREATE_promoter_URL, payload)
+        res = self.client.post(CREATE_PROMOTER_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         promoter = Promoter.objects.get(**res.data)
         self.assertTrue(promoter.check_password(payload['password']))
@@ -40,7 +44,7 @@ class PublicpromoterApiTests(TestCase):
         Test that an error is raised if a new promoter has a short password.
         """
         payload = {'email': 'promoter@test.com', 'password': 'test'}
-        res = self.client.post(CREATE_promoter_URL, payload)
+        res = self.client.post(CREATE_PROMOTER_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         promoter_exists = Promoter.objects.filter(
             email=payload['email']
@@ -58,8 +62,85 @@ class PublicpromoterApiTests(TestCase):
             'name': 'test promoter'
         }
         create_promoter(**payload)
-        res = self.client.post(CREATE_promoter_URL, payload)
+        res = self.client.post(CREATE_PROMOTER_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_promoter(self):
+        """Test retrieving an promoter."""
+        test_promoter = {
+            'email': 'promoter@test.com',
+            'password': 'testpass',
+            'name': 'test promoter',
+            'is_verified': True
+        }
+        create_promoter(**test_promoter)
+        res = self.client.get(RETRIEVE_PROMOTER_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('name', res.data)
+
+    def test_retrieve_promoter_non_existent(self):
+        """Test retrieving an promoter that doesn't exist."""
+        res = self.client.get(RETRIEVE_PROMOTER_URL)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_retrieve_promoter_hidden_fields(self):
+        """Test that certain fields are hidden when retrieving an promoter."""
+        test_promoter = {
+            'email': 'promoter@test.com',
+            'password': 'testpass',
+            'name': 'test promoter',
+            'phone': '+447546103437'
+        }
+        create_promoter(**test_promoter)
+        res = self.client.get(RETRIEVE_PROMOTER_URL)
+        self.assertNotIn('email', res.data)
+        self.assertNotIn('password', res.data)
+        self.assertNotIn('phone', res.data)
+
+    def test_list_promoters(self):
+        """Test that promoters are listed."""
+        test_promoter_1 = {
+            'email': 'promoter1@test.com',
+            'password': 'testpass',
+            'name': 'test promoter 1',
+            'is_verified': True,
+            'phone': '+447546103437'
+        }
+        test_promoter_2 = {
+            'email': 'promoter2@test.com',
+            'password': 'testpass',
+            'name': 'test promoter 2',
+            'is_verified': True,
+            'phone': '+447546103438'
+        }
+        create_promoter(**test_promoter_1)
+        create_promoter(**test_promoter_2)
+        res = self.client.get(LIST_PROMOTERS_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
+
+    def test_list_promoters_not_verified(self):
+        """Test that unverified promoters are not listed."""
+        test_promoter_1 = {
+            'email': 'promoter1@test.com',
+            'password': 'testpass',
+            'name': 'test promoter 1',
+            'is_verified': True,
+            'phone': '+447546103437'
+        }
+        test_promoter_2 = {
+            'email': 'promoter2@test.com',
+            'password': 'testpass',
+            'name': 'test promoter 2',
+            'is_verified': False,
+            'phone': '+447546103438'
+        }
+        create_promoter(**test_promoter_1)
+        create_promoter(**test_promoter_2)
+        res = self.client.get(LIST_PROMOTERS_URL)
+        self.assertEqual(len(res.data), 1)
+        name = res.data[0]['name']
+        self.assertEqual(name, 'test promoter 1')
 
 
 class PrivatepromoterApiTests(TestCase):
