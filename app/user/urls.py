@@ -18,4 +18,20 @@ urlpatterns = [
         name='create-promoter'
     ),
     path('me/', views.ManageUserView.as_view(), name='me'),
+    path('artist/<slug>', views.RetrieveArtistView.as_view(), name='artist'),
+    path(
+        'promoter/<slug>',
+        views.RetrievePromoterView.as_view(),
+        name='promoter'
+    ),
+    path(
+        'list/artists/',
+        views.ListPromoterView.as_view(),
+        name='list-artists'
+    ),
+    path(
+        'list/promoters/',
+        views.ListArtistView.as_view(),
+        name='list-promoters'
+    ),
 ]

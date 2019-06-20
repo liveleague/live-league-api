@@ -1,3 +1,6 @@
+
+# -------------------- Old API -------------------- #
+'''
 from rest_framework import viewsets, mixins, status, authentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -35,3 +38,4 @@ class EventViewSet(BasePromoterAttrViewSet):
     """Event management for promoters."""
     queryset = Event.objects.all()
     serializer_class = EventSerializer
+'''

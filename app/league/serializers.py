@@ -1,3 +1,6 @@
+
+# -------------------- Old API -------------------- #
+'''
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
@@ -53,3 +56,4 @@ class EventSerializer(serializers.ModelSerializer):
 
 # class PromoterPointsList(
 #   """"Returns historical points data of artist(s)."""
+'''

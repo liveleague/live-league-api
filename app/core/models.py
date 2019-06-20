@@ -1,4 +1,5 @@
 from django.db import models
+from django.template.defaultfilters import slugify
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
      PermissionsMixin
 from phonenumber_field.modelfields import PhoneNumberField
@@ -14,17 +15,20 @@ def signup_check(email, password):
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, email, password, **extra_fields):
+    def create_user(self, email, password, name, **extra_fields):
         """Creates and saves a new user."""
         signup_check(email, password)
-        user = self.model(email=self.normalize_email(email), **extra_fields)
+        user = self.model(
+            email=self.normalize_email(email), name=name, **extra_fields
+        )
         user.set_password(password)
+        user.slug = slugify(name)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password):
+    def create_superuser(self, email, name, password):
         """Creates and saves a new superuser."""
-        user = self.create_user(email, password)
+        user = self.create_user(email, name, password)
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
@@ -43,6 +47,7 @@ class ArtistManager(BaseUserManager):
         )
         artist.set_password(password)
         artist.is_artist = True
+        artist.slug = slugify(name)
         artist.save(using=self._db)
         return artist
 
@@ -59,6 +64,7 @@ class PromoterManager(BaseUserManager):
         )
         promoter.set_password(password)
         promoter.is_promoter = True
+        promoter.slug = slugify(name)
         promoter.save(using=self._db)
         return promoter
 
@@ -79,6 +85,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
+    slug = models.SlugField()
 
     # Contact
     facebook = models.URLField(blank=True)

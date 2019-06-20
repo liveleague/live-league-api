@@ -6,7 +6,7 @@ from rest_framework import serializers
 from core.models import Artist, Promoter
 
 
-class AuthTokenSerializer(serializers.Serializer):
+class TokenSerializer(serializers.Serializer):
     """Serializer for the authentication token object."""
     email = serializers.CharField()
     password = serializers.CharField(
@@ -85,6 +85,18 @@ class ArtistSerializer(serializers.ModelSerializer):
         return artist
 
 
+class PublicArtistSerializer(serializers.ModelSerializer):
+    """Public serializer for the artist object."""
+    # Need to add events
+
+    class Meta:
+        model = Artist
+        fields = (
+            'name', 'description', 'points', 'facebook', 'instagram',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube'
+        )
+
+
 class PromoterSerializer(serializers.ModelSerializer):
     """Serializer for the promoter object."""
     # Needs a 'DRY' makeover
@@ -113,3 +125,15 @@ class PromoterSerializer(serializers.ModelSerializer):
             promoter.set_password(password)
             promoter.save()
         return promoter
+
+
+class PublicPromoterSerializer(serializers.ModelSerializer):
+    """Public serializer for the promoter object."""
+    # Need to add events
+
+    class Meta:
+        model = Promoter
+        fields = (
+            'name', 'description', 'points', 'facebook', 'instagram',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube'
+        )

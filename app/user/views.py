@@ -2,13 +2,15 @@ from rest_framework import generics, authentication, permissions
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
 
-from user.serializers import UserSerializer, AuthTokenSerializer, \
-                             ArtistSerializer, PromoterSerializer
+from core.models import Artist, Promoter
+from user.serializers import UserSerializer, TokenSerializer, \
+                             ArtistSerializer, PromoterSerializer, \
+                             PublicArtistSerializer, PublicPromoterSerializer
 
 
 class CreateTokenView(ObtainAuthToken):
     """Create a new authentication token."""
-    serializer_class = AuthTokenSerializer
+    serializer_class = TokenSerializer
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
 
@@ -30,7 +32,7 @@ class CreatePromoterView(generics.CreateAPIView):
     serializer_class = PromoterSerializer
 
 
-class ManageUserView(generics.RetrieveUpdateAPIView):
+class ManageUserView(generics.RetrieveUpdateDestroyAPIView):
     """Manage the authenticated user."""
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -51,3 +53,29 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
             return self.request.user.promoter
         else:
             return self.request.user
+
+
+class RetrieveArtistView(generics.RetrieveAPIView):
+    """Retrieve an artist."""
+    queryset = Artist.objects.all().order_by('name')
+    serializer_class = PublicArtistSerializer
+    lookup_field = 'slug'
+
+
+class RetrievePromoterView(generics.RetrieveAPIView):
+    """Retrieve a promoter."""
+    queryset = Promoter.objects.filter(is_verified=True).order_by('name')
+    serializer_class = PublicPromoterSerializer
+    lookup_field = 'slug'
+
+
+class ListArtistView(generics.ListAPIView):
+    """List artists."""
+    queryset = Artist.objects.all()
+    serializer_class = PublicArtistSerializer
+
+
+class ListPromoterView(generics.ListAPIView):
+    """List promoters."""
+    queryset = Promoter.objects.filter(is_verified=True)
+    serializer_class = PublicPromoterSerializer

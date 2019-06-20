@@ -13,9 +13,11 @@ class UserManagerTests(TestCase):
         """Test creating a new user."""
         email = 'test@test.com'
         password = 'testpass'
+        name = 'test user'
         user = get_user_model().objects.create_user(
             email=email,
-            password=password
+            password=password,
+            name=name
         )
         self.assertEqual(user.email, email)
         self.assertTrue(user.check_password(password))
@@ -25,25 +27,29 @@ class UserManagerTests(TestCase):
         email = 'test@TEST.com'
         user = get_user_model().objects.create_user(
             email=email,
-            password='testpass'
+            password='testpass',
+            name='test user'
         )
         self.assertEqual(user.email, email.lower())
 
     def test_create_user_without_email(self):
         """Test that an error is raised if a new user has no email address."""
         with self.assertRaises(ValueError):
-            get_user_model().objects.create_user(None, 'testpass')
+            get_user_model().objects.create_user(None, 'testpass', 'test user')
 
     def test_create_user_without_password(self):
         """Test that an error is raised if a new user has no password."""
         with self.assertRaises(ValueError):
-            get_user_model().objects.create_user('test@test.com', None)
+            get_user_model().objects.create_user(
+                'test@test.com', None, name='test user'
+            )
 
     def test_create_superuser(self):
         """Test creating a new superuser."""
         user = get_user_model().objects.create_superuser(
             email='test@test.com',
-            password='testpass'
+            password='testpass',
+            name='test user'
         )
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
@@ -151,7 +157,8 @@ class StringRepresentationTests(TestCase):
         """Test the string representation of the User model."""
         user = get_user_model().objects.create_user(
             email='test@test.com',
-            password='testpass'
+            password='testpass',
+            name='test user'
         )
         self.assertEqual(str(user), user.name)
 

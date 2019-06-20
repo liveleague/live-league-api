@@ -50,14 +50,22 @@ class PublicUserApiTests(TestCase):
         Test that an error is raised if a new user tries to
         use an email address that has already been registered.
         """
-        payload = {'email': 'test@test.com', 'password': 'testpass'}
+        payload = {
+            'email': 'test@test.com',
+            'password': 'testpass',
+            'name': 'test user'
+        }
         create_user(**payload)
         res = self.client.post(CREATE_USER_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_token(self):
         """Test that a token is created for the new user."""
-        payload = {'email': 'test@test.com', 'password': 'testpass'}
+        payload = {
+            'email': 'test@test.com',
+            'password': 'testpass',
+            'name': 'test user'
+        }
         create_user(**payload)
         res = self.client.post(TOKEN_URL, payload)
         self.assertIn('token', res.data)
@@ -68,8 +76,16 @@ class PublicUserApiTests(TestCase):
         Test that a token is not created if invalid credentials
         are given by the new user.
         """
-        create_user(email='test@test.com', password='testpass')
-        payload = {'email': 'test@test.com', 'password': 'wrong'}
+        create_user(
+            email='test@test.com',
+            password='testpass',
+            name='test user'
+        )
+        payload = {
+            'email': 'test@test.com',
+            'password': 'wrong',
+            'name': 'test user'
+        }
         res = self.client.post(TOKEN_URL, payload)
         self.assertNotIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
