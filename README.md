@@ -1,2 +1,2 @@
-# band-battle-api
-Django REST Framework API for Band Battle.
+# live-league-api
+Django REST Framework API for Live League.
