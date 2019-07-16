@@ -8,7 +8,9 @@ from core import models
 class UserAdmin(BaseUserAdmin):
     ordering = ['id']
     list_display = ['id', 'email', 'name', 'slug']
-    list_filter = ['is_active', 'is_staff', 'is_superuser']
+    list_filter = [
+        'is_active', 'is_staff', 'is_superuser', 'is_artist', 'is_promoter'
+    ]
     fieldsets = (
         (None, {'fields': ('email', 'password',)}),
         (_('Personal Info'), {'fields': ('name', 'slug',)}),
@@ -40,6 +42,7 @@ class UserAdmin(BaseUserAdmin):
             }
         ),
         (_('Important dates'), {'fields': ('last_login',)}),
+        (_('Image'), {'fields': ('image',)}),
     )
     add_fieldsets = (
         (None, {
@@ -49,8 +52,53 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
+class ArtistAdmin(admin.ModelAdmin):
+    ordering = ['id']
+    list_display = [
+        'slug', 'id', 'name', 'email', 'total_events', 'total_points'
+    ]
+
+    def total_events(self, obj):
+        return obj.total_events()
+
+    def total_points(self, obj):
+        return obj.total_points()
+
+
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'created_date', 'created_time', 'sender', 'subject']
+
+
+class ReadFlagAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'message', 'opened', 'recipient']
+
+
+class EventAdmin(admin.ModelAdmin):
+    list_display = [
+        'pk', 'name', 'start_date', 'start_time',
+        'end_date', 'end_time', 'venue', 'promoter'
+    ]
+
+
+class TallyAdmin(admin.ModelAdmin):
+    list_display = ['slug', 'artist', 'event']
+
+
+class TicketTypeAdmin(admin.ModelAdmin):
+    list_display = ['slug', 'event', 'name', 'price', 'tickets_remaining']
+
+
+class TicketAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'owner', 'ticket_type', 'vote']
+
+
 admin.site.register(models.User, UserAdmin)
-admin.site.register(models.Artist)
+admin.site.register(models.Artist, ArtistAdmin)
 admin.site.register(models.Promoter)
+admin.site.register(models.Message, MessageAdmin)
+admin.site.register(models.ReadFlag, ReadFlagAdmin)
 admin.site.register(models.Venue)
-admin.site.register(models.Event)
+admin.site.register(models.Event, EventAdmin)
+admin.site.register(models.Tally, TallyAdmin)
+admin.site.register(models.Ticket, TicketAdmin)
+admin.site.register(models.TicketType, TicketTypeAdmin)

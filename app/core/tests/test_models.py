@@ -1,5 +1,5 @@
 import pytz
-from datetime import datetime
+from datetime import date, time
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
@@ -188,12 +188,10 @@ class StringRepresentationTests(TestCase):
     def test_str_event(self):
         """Test the string representation of the Event model."""
         event = models.Event.objects.create(
-            end_time=datetime(
-                2020, 1, 1, 2, 0, 0, 0
-            ).replace(tzinfo=pytz.utc),
-            start_time=datetime(
-                2019, 12, 31, 19, 0, 0, 0
-            ).replace(tzinfo=pytz.utc),
+            end_date=datetime.date(2020, 1, 1).replace(tzinfo=pytz.utc),
+            end_time=datetime.time(2, 0, 0).replace(tzinfo=pytz.utc),
+            start_date=datetime.date(2019, 12, 31).replace(tzinfo=pytz.utc),
+            start_time=datetime.time(20, 0, 0).replace(tzinfo=pytz.utc),
             name='test event',
             promoter=models.Promoter.objects.create_promoter(
                 email='promoter@test.com',

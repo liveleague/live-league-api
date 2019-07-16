@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from core.models import Artist, Promoter
+from core.models import Artist, Promoter, Message, ReadFlag, Ticket
 
 
 class TokenSerializer(serializers.Serializer):
@@ -36,8 +36,10 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            'email', 'password', 'name', 'facebook', 'instagram', 'phone',
-            'soundcloud', 'spotify', 'twitter', 'website', 'youtube'
+            'email', 'password', 'name', 'address_city', 'address_country',
+            'address_line1', 'address_line2', 'address_state', 'address_zip',
+            'facebook', 'instagram', 'phone', 'soundcloud', 'spotify',
+            'twitter', 'website', 'youtube', 'image'
         )
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
 
@@ -57,18 +59,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ArtistSerializer(serializers.ModelSerializer):
     """Serializer for the artist object."""
-    # Needs a 'DRY' makeover
 
     class Meta:
         model = Artist
         fields = (
-            'email', 'password', 'name', 'description', 'points', 'facebook',
+            'email', 'password', 'name', 'description', 'facebook',
             'instagram', 'phone', 'soundcloud', 'spotify', 'twitter',
-            'website', 'youtube'
+            'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 5},
-            'points': {'read_only': True}
         }
 
     def create(self, validated_data):
@@ -87,26 +87,33 @@ class ArtistSerializer(serializers.ModelSerializer):
 
 class PublicArtistSerializer(serializers.ModelSerializer):
     """Public serializer for the artist object."""
-    # Need to add events
+    events = serializers.SerializerMethodField()
+    points = serializers.SerializerMethodField()
 
     class Meta:
         model = Artist
         fields = (
-            'name', 'description', 'points', 'facebook', 'instagram',
-            'soundcloud', 'spotify', 'twitter', 'website', 'youtube'
+            'name', 'description', 'events', 'points', 'facebook', 'instagram',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
         )
+
+    def get_events(self, obj):
+        return obj.tallies.count()
+
+    def get_points(self, obj):
+        tickets = Ticket.objects.filter(vote__artist=obj)
+        return tickets.count()
 
 
 class PromoterSerializer(serializers.ModelSerializer):
     """Serializer for the promoter object."""
-    # Needs a 'DRY' makeover
 
     class Meta:
         model = Promoter
         fields = (
             'email', 'password', 'name', 'description', 'is_verified',
             'facebook', 'instagram', 'phone', 'soundcloud', 'spotify',
-            'twitter', 'website', 'youtube'
+            'twitter', 'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 5},
@@ -129,11 +136,46 @@ class PromoterSerializer(serializers.ModelSerializer):
 
 class PublicPromoterSerializer(serializers.ModelSerializer):
     """Public serializer for the promoter object."""
-    # Need to add events
 
     class Meta:
         model = Promoter
         fields = (
-            'name', 'description', 'points', 'facebook', 'instagram',
-            'soundcloud', 'spotify', 'twitter', 'website', 'youtube'
+            'name', 'description', 'facebook', 'instagram', 'soundcloud',
+            'spotify', 'twitter', 'website', 'youtube', 'image'
         )
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    """Serializer for the message object."""
+    sender = serializers.StringRelatedField()
+
+    class Meta:
+        model = Message
+        fields = ('created_date', 'created_time', 'sender', 'subject', 'text')
+        extra_kwargs = {
+            'sender': {'read_only': True},
+        }
+
+    def create(self, validated_data):
+        """Create a new message and return it."""
+        return Message.objects.create_message(**validated_data)
+
+
+class ReadFlagSerializer(serializers.ModelSerializer):
+    """Serializer for the read flag object."""
+
+    class Meta:
+        model = ReadFlag
+        fields = ('message', 'opened', 'recipient')
+        extra_kwargs = {
+            'opened': {'read_only': True},
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ReadFlagSerializer, self).__init__(*args, **kwargs)
+        user = kwargs['context']['request'].user
+        self.fields['message'].queryset = Message.objects.filter(sender=user)
+
+    def create(self, validated_data):
+        """Create a new read flag and return it."""
+        return ReadFlag.objects.create_readflag(**validated_data)

@@ -17,10 +17,20 @@ urlpatterns = [
         views.CreatePromoterView.as_view(),
         name='create-promoter'
     ),
-    path('me/', views.ManageUserView.as_view(), name='me'),
-    path('artist/<slug>', views.RetrieveArtistView.as_view(), name='artist'),
     path(
-        'promoter/<slug>',
+        'create/message/',
+        views.CreateMessageView.as_view(),
+        name='create-message'
+    ),
+    path(
+        'create/read-flag/',
+        views.CreateReadFlagView.as_view(),
+        name='create-read-flag'
+    ),
+    path('me/', views.ManageUserView.as_view(), name='me'),
+    path('artist/<slug>/', views.RetrieveArtistView.as_view(), name='artist'),
+    path(
+        'promoter/<slug>/',
         views.RetrievePromoterView.as_view(),
         name='promoter'
     ),
