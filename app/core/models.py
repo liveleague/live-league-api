@@ -5,9 +5,9 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
      PermissionsMixin
-from django.core.mail import send_mail
 from phonenumber_field.modelfields import PhoneNumberField
 
+from core.email import send_email
 
 def recipe_image_file_path(instance, filename):
     """Generate file path for new recipe image."""
