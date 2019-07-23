@@ -19,6 +19,11 @@ urlpatterns = [
         name='create-ticket'
     ),
     path(
+        'create/voucher/',
+        views.CreateVoucherView.as_view(),
+        name='create-voucher'
+    ),
+    path(
         'edit/venue/<slug>/', views.EditVenueView.as_view(), name='edit-venue'
     ),
     path('edit/event/<pk>/', views.EditEventView.as_view(), name='edit-event'),
@@ -33,12 +38,22 @@ urlpatterns = [
         name='edit-ticket-type'
     ),
     path(
-        'vote/ticket/<pk>/', views.VoteTicketView.as_view(), name='vote'
+        'vote/ticket/<pk>/', views.VoteTicketView.as_view(), name='vote-ticket'
+    ),
+    path(
+        'vote/voucher/<code>/',
+        views.VoteVoucherView.as_view(),
+        name='vote-voucher'
     ),
     path('venue/<slug>/', views.RetrieveVenueView.as_view(), name='venue'),
     path('event/<pk>/', views.RetrieveEventView.as_view(), name='event'),
     path('tally/<slug>/', views.RetrieveTallyView.as_view(), name='tally'),
     path('ticket/<pk>/', views.RetrieveTicketView.as_view(), name='ticket'),
+    path(
+        'voucher/<code>/',
+        views.RetrieveVoucherView.as_view(),
+        name='voucher'
+    ),
     path(
         'table-row/<slug>/',
         views.RetrieveTableRowView.as_view(),
@@ -60,6 +75,9 @@ urlpatterns = [
     ),
     path(
         'list/tickets/', views.ListTicketView.as_view(), name='list-tickets'
+    ),
+    path(
+        'list/vouchers/', views.ListVoucherView.as_view(), name='list-vouchers'
     ),
     path(
         'list/table-rows/',

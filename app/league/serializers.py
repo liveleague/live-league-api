@@ -2,7 +2,8 @@ from django.template.defaultfilters import slugify
 
 from rest_framework import serializers
 
-from core.models import Artist, Venue, Event, Tally, TicketType, Ticket
+from core.models import Artist, Venue, Event, Tally, TicketType, Ticket, \
+                        Voucher
 from user.serializers import PublicArtistSerializer
 
 
@@ -185,6 +186,41 @@ class TicketSerializer(serializers.ModelSerializer):
             'ticket_type': {'read_only': True},
         }
         read_only_fields = ('id',)
+
+
+class CreateVoucherSerializer(serializers.ModelSerializer):
+    """Serializer for the voucher object."""
+    ticket_type = serializers.SlugRelatedField(
+        queryset=TicketType.objects.all(), slug_field='slug'
+    )
+
+    class Meta:
+        model = Voucher
+        fields = ('code', 'ticket_type')
+        extra_kwargs = {
+            'code': {'read_only': True},
+        }
+
+    def create(self, validated_data):
+        """Create a new ticket and return it."""
+        return Voucher.objects.create_voucher(**validated_data)
+
+
+class VoucherSerializer(serializers.ModelSerializer):
+    """Serializer for the voucher object."""
+    owner = serializers.StringRelatedField()
+    ticket_type = serializers.StringRelatedField()
+    vote = serializers.SlugRelatedField(
+        queryset=Tally.objects.all(), slug_field='slug'
+    )
+
+    class Meta:
+        model = Voucher
+        fields = ('code', 'owner', 'ticket_type', 'vote')
+        extra_kwargs = {
+            'owner': {'read_only': True},
+            'ticket_type': {'read_only': True},
+        }
 
 
 class EventSerializer(serializers.ModelSerializer):

@@ -2,12 +2,16 @@ import uuid
 import os
 
 from django.db import models
+from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
      PermissionsMixin
-from phonenumber_field.modelfields import PhoneNumberField
 
-from core.email import send_email
+from phonenumber_field.modelfields import PhoneNumberField
+from hashids import Hashids
+
+from core.email import Email
+
 
 def recipe_image_file_path(instance, filename):
     """Generate file path for new recipe image."""
@@ -26,6 +30,19 @@ def signup_check(email, password, name):
         raise ValueError('Enter a name.')
 
 
+def create_code(pk):
+    """Helper function to create voucher codes."""
+    hashids = Hashids(
+        salt=settings.SECRET_KEY,
+        min_length=6,
+        alphabet='abcdefghijkmnopqrstuvwxyz123456789'
+    )
+    code = ''
+    while len(code) != 6:
+        code = hashids.encode(pk)
+    return code
+
+
 class UserManager(BaseUserManager):
 
     def create_user(self, email, password, name, **extra_fields):
@@ -37,6 +54,7 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.slug = slugify(name)
         user.save(using=self._db)
+        Email('welcome_user', user.email).send()
         return user
 
     def create_superuser(self, email, name, password):
@@ -60,6 +78,7 @@ class ArtistManager(BaseUserManager):
         artist.is_artist = True
         artist.slug = slugify(name)
         artist.save(using=self._db)
+        Email('welcome_artist', artist.email).send()
         return artist
 
 
@@ -80,6 +99,7 @@ class PromoterManager(BaseUserManager):
         promoter.is_promoter = True
         promoter.slug = slugify(name)
         promoter.save(using=self._db)
+        Email('welcome_promoter', promoter.email).send()
         return promoter
 
 
@@ -183,6 +203,7 @@ class TallyManager(BaseUserManager):
         )
         tally[0].slug = slugify(str(artist) + '-' + str(event.pk))
         tally[0].save(using=self._db)
+        Email('artist_added', artist.email).send()
         return tally[0]
 
 
@@ -217,18 +238,52 @@ class TicketManager(BaseUserManager):
             raise ValueError('Enter a ticket type.')
         if ticket_type.tickets_remaining >= 1:
             ticket_type.tickets_remaining -= 1
+            # ADD STRIPE PROCESS HERE & GIVE OPTION TO PAY WITH CREDIT
             ticket = Ticket.objects.create(
                 owner=owner,
                 ticket_type=ticket_type,
                 **extra_fields
             )
+            promoter = ticket_type.event.promoter
+            credit = promoter.credit + ticket_type.price
+            promoter.credit = credit
             ticket_type.save(using=self._db)
             ticket.save(using=self._db)
+            promoter.save(using=self._db)
+            Email('ticket', owner.email).send()
+            # TICKET_SOLD EMAIL TO PROMOTER
         else:
             raise ValueError(
                 'Enter a ticket type that still has tickets remaining.'
             )
         return ticket
+
+
+class VoucherManager(BaseUserManager):
+
+    def create_voucher(self, ticket_type, **extra_fields):
+        """Creates and saves a new ticket."""
+        if not ticket_type:
+            raise ValueError('Enter a ticket type.')
+        if ticket_type.tickets_remaining >= 1:
+            ticket_type.tickets_remaining -= 1
+            voucher = Voucher.objects.create(
+                ticket_type=ticket_type,
+                **extra_fields
+            )
+            promoter = ticket_type.event.promoter
+            credit = promoter.credit - ticket_type.price
+            promoter.credit = credit
+            ticket_type.save(using=self._db)
+            voucher.save(using=self._db)
+            promoter.save(using=self._db)
+            voucher.code = create_code(voucher.pk)
+            voucher.save(using=self._db)
+        else:
+            raise ValueError(
+                'Enter a ticket type that still has tickets remaining.'
+            )
+        return voucher
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -237,12 +292,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     Supports the 'basic' user type as well as artists and promoters.
     """
     # Main
+    credit = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     email = models.EmailField(max_length=255, unique=True)
-    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
+    image = models.ImageField(
+        null=True, blank=True, upload_to=recipe_image_file_path
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     name = models.CharField(max_length=255)
     slug = models.SlugField()
+
+    # Groups
+    is_artist = models.BooleanField(default=False)
+    is_promoter = models.BooleanField(default=False)
 
     # Billing
     address_city = models.CharField(max_length=255, blank=True)
@@ -261,10 +323,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     twitter = models.URLField(blank=True)
     website = models.URLField(blank=True)
     youtube = models.URLField(blank=True)
-
-    # Groups
-    is_artist = models.BooleanField(default=False)
-    is_promoter = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
@@ -355,7 +413,7 @@ class Venue(models.Model):
     address_line2 = models.CharField(max_length=255, blank=True)
     address_state = models.CharField(max_length=255, blank=True)
     address_zip = models.CharField(max_length=255)
-    description = models.CharField(max_length=1000)
+    description = models.CharField(max_length=1000, blank=True)
     name = models.CharField(max_length=255)
     slug = models.SlugField()
 
@@ -368,7 +426,7 @@ class Venue(models.Model):
 
 class Event(models.Model):
     """Event model. (better description needed)"""
-    description = models.CharField(max_length=1000)
+    description = models.CharField(max_length=1000, blank=True)
     end_date = models.DateField()
     end_time = models.TimeField()
     name = models.CharField(max_length=255)
@@ -445,3 +503,28 @@ class Ticket(models.Model):
 
     def __str__(self):
         return str(self.pk)
+
+
+class Voucher(models.Model):
+    """Voucher model. (better description needed)."""
+    code = models.CharField(max_length=6)
+    owner = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        related_name='vouchers',
+        null=True,
+        blank=True
+    )
+    ticket_type = models.ForeignKey(
+        'TicketType', on_delete=models.CASCADE, related_name='vouchers'
+    )
+    vote = models.ForeignKey(
+        'Tally',
+        on_delete=models.CASCADE,
+        related_name='vouchers',
+        null=True,
+        blank=True
+    )
+
+    REQUIRED_FIELDS = ['ticket_type']
+    objects = VoucherManager()

@@ -16,6 +16,12 @@ Vagrant.configure("2") do |config|
 
   config.vm.network "forwarded_port", host_ip: "127.0.0.1", guest: 8000, host: 8000
 
+  config.vm.provider :virtualbox do |vb|
+
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+
+  end
+
   config.vm.provision "shell", inline: <<-SHELL
     # Update and upgrade the server packages.
     sudo apt-get update

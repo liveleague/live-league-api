@@ -28,6 +28,11 @@ urlpatterns = [
         name='create-read-flag'
     ),
     path('me/', views.ManageUserView.as_view(), name='me'),
+    path(
+        'message/<pk>',
+        views.RetrieveMessageView.as_view(),
+        name='message'
+    ),
     path('artist/<slug>/', views.RetrieveArtistView.as_view(), name='artist'),
     path(
         'promoter/<slug>/',
@@ -43,5 +48,10 @@ urlpatterns = [
         'list/promoters/',
         views.ListPromoterView.as_view(),
         name='list-promoters'
+    ),
+    path(
+        'list/messages/<filter>',
+        views.ListMessageView.as_view(),
+        name='list-messages'
     ),
 ]

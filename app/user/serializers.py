@@ -36,12 +36,15 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            'email', 'password', 'name', 'address_city', 'address_country',
-            'address_line1', 'address_line2', 'address_state', 'address_zip',
-            'facebook', 'instagram', 'phone', 'soundcloud', 'spotify',
-            'twitter', 'website', 'youtube', 'image'
+            'credit', 'email', 'password', 'name', 'address_city',
+            'address_country', 'address_line1', 'address_line2',
+            'address_state', 'address_zip', 'facebook', 'instagram', 'phone',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
         )
-        extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
+        extra_kwargs = {
+            'password': {'write_only': True, 'min_length': 5},
+            'credit': {'read_only': True},
+        }
 
     def create(self, validated_data):
         """Create a new user and return it."""
@@ -63,12 +66,13 @@ class ArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = (
-            'email', 'password', 'name', 'description', 'facebook',
+            'credit', 'email', 'password', 'name', 'description', 'facebook',
             'instagram', 'phone', 'soundcloud', 'spotify', 'twitter',
             'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 5},
+            'credit': {'read_only': True},
         }
 
     def create(self, validated_data):
@@ -111,13 +115,14 @@ class PromoterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promoter
         fields = (
-            'email', 'password', 'name', 'description', 'is_verified',
-            'facebook', 'instagram', 'phone', 'soundcloud', 'spotify',
-            'twitter', 'website', 'youtube', 'image'
+            'credit', 'email', 'password', 'name', 'description',
+            'is_verified', 'facebook', 'instagram', 'phone', 'soundcloud',
+            'spotify', 'twitter', 'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 5},
             'is_verified': {'read_only': True},
+            'credit': {'read_only': True},
         }
 
     def create(self, validated_data):

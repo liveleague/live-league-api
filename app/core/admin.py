@@ -3,6 +3,16 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext as _
 
 from core import models
+from core.email import Email
+
+
+def verify(modeladmin, request, queryset):
+    """Mark promoters as 'verified'."""
+    queryset.update(is_verified=True)
+    email_addresses = list(queryset.values_list('email', flat=True))
+    Email('verified_promoter', email_addresses).send()
+
+verify.short_description = "Mark promoters as 'verified'"
 
 
 class UserAdmin(BaseUserAdmin):
@@ -65,6 +75,12 @@ class ArtistAdmin(admin.ModelAdmin):
         return obj.total_points()
 
 
+class PromoterAdmin(admin.ModelAdmin):
+    ordering = ['id']
+    list_display = ['slug', 'id', 'name', 'email', 'is_verified']
+    actions = [verify]
+
+
 class MessageAdmin(admin.ModelAdmin):
     list_display = ['pk', 'created_date', 'created_time', 'sender', 'subject']
 
@@ -92,9 +108,13 @@ class TicketAdmin(admin.ModelAdmin):
     list_display = ['pk', 'owner', 'ticket_type', 'vote']
 
 
+class VoucherAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'code', 'owner', 'ticket_type', 'vote']
+
+
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Artist, ArtistAdmin)
-admin.site.register(models.Promoter)
+admin.site.register(models.Promoter, PromoterAdmin)
 admin.site.register(models.Message, MessageAdmin)
 admin.site.register(models.ReadFlag, ReadFlagAdmin)
 admin.site.register(models.Venue)
@@ -102,3 +122,4 @@ admin.site.register(models.Event, EventAdmin)
 admin.site.register(models.Tally, TallyAdmin)
 admin.site.register(models.Ticket, TicketAdmin)
 admin.site.register(models.TicketType, TicketTypeAdmin)
+admin.site.register(models.Voucher, VoucherAdmin)

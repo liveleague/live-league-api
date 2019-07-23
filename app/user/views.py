@@ -1,4 +1,6 @@
 from django_filters import rest_framework as filters
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 from rest_framework import filters as rest_filters
 from rest_framework import generics, authentication, permissions, viewsets, \
@@ -8,7 +10,7 @@ from rest_framework.settings import api_settings
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from core.models import Artist, Promoter, Event, Tally
+from core.models import Artist, Promoter, Message, ReadFlag, Event, Tally
 from user.serializers import UserSerializer, TokenSerializer, \
                              ArtistSerializer, PromoterSerializer, \
                              PublicArtistSerializer, \
@@ -91,6 +93,21 @@ class RetrievePromoterView(generics.RetrieveAPIView):
     lookup_field = 'slug'
 
 
+class RetrieveMessageView(generics.RetrieveAPIView):
+    """Retrieve a message."""
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = MessageSerializer
+
+    def get_queryset(self):
+        message = Message.objects.get(pk=self.kwargs['pk'])
+        readflag = ReadFlag.objects.filter(
+            message=message,
+            recipient=self.request.user
+        ).update(opened=True)
+        return Message.objects.filter(readflags__recipient=self.request.user)
+
+
 class ArtistFilter(filters.FilterSet):
     """Defines the filter fields for ListArtistView."""
     description = filters.CharFilter(
@@ -115,6 +132,47 @@ class PromoterFilter(filters.FilterSet):
     class Meta:
         model = Promoter
         fields = ['description', 'name', 'events']
+
+
+class MessageFilter(filters.FilterSet):
+    """Defines the filter fields for ListMessageView."""
+    created_date = filters.DateFilter(
+        field_name='created_date', lookup_expr='exact'
+    )
+    created_date__gt = filters.DateFilter(
+        field_name='created_date', lookup_expr='gt'
+    )
+    created_date__lt = filters.DateFilter(
+        field_name='created_date', lookup_expr='lt'
+    )
+    created_date__range = filters.DateFilter(
+        field_name='created_date', lookup_expr='range'
+    )
+    created_time = filters.TimeFilter(
+        field_name='created_time', lookup_expr='exact'
+    )
+    created_time__gt = filters.TimeFilter(
+        field_name='created_time', lookup_expr='gt'
+    )
+    created_time__lt = filters.TimeFilter(
+        field_name='created_time', lookup_expr='lt'
+    )
+    created_time__range = filters.TimeFilter(
+        field_name='created_time', lookup_expr='range'
+    )
+    sender = filters.ModelChoiceFilter(queryset=get_user_model().objects.all())
+    subject = filters.CharFilter(
+        field_name='subject', lookup_expr='icontains'
+    )
+    text = filters.CharFilter(
+        field_name='text', lookup_expr='icontains'
+    )
+
+    class Meta:
+        model = Message
+        fields = [
+            'created_date', 'created_time', 'sender', 'subject', 'text'
+        ]
 
 
 class ListArtistView(generics.ListAPIView):
@@ -143,3 +201,35 @@ class ListPromoterView(generics.ListAPIView):
     filterset_class = PromoterFilter
     search_fields = ('description', 'name')
     ordering_fields = ('description', 'name')
+
+
+class ListMessageView(generics.ListAPIView):
+    """List messages."""
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = MessageSerializer
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        rest_filters.SearchFilter,
+        rest_filters.OrderingFilter,
+    )
+    filterset_class = MessageFilter
+    search_fields = ('created_date', 'created_time', 'subject', 'text')
+    ordering_fields = ('created_date', 'created_time', 'subject', 'text')
+
+    def get_queryset(self):
+        if self.kwargs['filter'] == 'read':
+            filter = True
+        elif self.kwargs['filter'] == 'unread':
+            filter = False
+        else:
+            filter = None
+        if filter is None:
+            return Message.objects.filter(
+                readflags__recipient=self.request.user
+            ).order_by('pk')
+        else:
+            return Message.objects.filter(
+                readflags__opened=filter,
+                readflags__recipient=self.request.user
+            ).order_by('pk')
