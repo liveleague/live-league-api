@@ -97,18 +97,14 @@ class EventAdmin(admin.ModelAdmin):
 
 
 class TallyAdmin(admin.ModelAdmin):
-    list_display = ['slug', 'artist', 'event']
+    list_display = ['pk', 'slug', 'artist', 'event']
 
 
 class TicketTypeAdmin(admin.ModelAdmin):
-    list_display = ['slug', 'event', 'name', 'price', 'tickets_remaining']
+    list_display = ['pk', 'slug', 'event', 'name', 'price', 'tickets_remaining']
 
 
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'owner', 'ticket_type', 'vote']
-
-
-class VoucherAdmin(admin.ModelAdmin):
     list_display = ['pk', 'code', 'owner', 'ticket_type', 'vote']
 
 
@@ -122,4 +118,3 @@ admin.site.register(models.Event, EventAdmin)
 admin.site.register(models.Tally, TallyAdmin)
 admin.site.register(models.Ticket, TicketAdmin)
 admin.site.register(models.TicketType, TicketTypeAdmin)
-admin.site.register(models.Voucher, VoucherAdmin)

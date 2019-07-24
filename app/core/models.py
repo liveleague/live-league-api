@@ -31,7 +31,7 @@ def signup_check(email, password, name):
 
 
 def create_code(pk):
-    """Helper function to create voucher codes."""
+    """Helper function to create ticket codes."""
     hashids = Hashids(
         salt=settings.SECRET_KEY,
         min_length=6,
@@ -201,7 +201,7 @@ class TallyManager(BaseUserManager):
             event=event,
             **extra_fields
         )
-        tally[0].slug = slugify(str(artist) + '-' + str(event.pk))
+        tally[0].slug = slugify(str(event.pk) + '-' + str(artist))
         tally[0].save(using=self._db)
         Email('artist_added', artist.email).send()
         return tally[0]
@@ -223,51 +223,20 @@ class TicketTypeManager(BaseUserManager):
             price=price,
             **extra_fields
         )
-        ticket_type[0].slug = slugify(name + '-' + str(event.pk))
+        ticket_type[0].slug = slugify(str(event.pk) + '-' + name)
         ticket_type[0].save(using=self._db)
         return ticket_type[0]
 
 
 class TicketManager(BaseUserManager):
 
-    def create_ticket(self, owner, ticket_type, **extra_fields):
+    def create_ticket(self, ticket_type, **extra_fields):
         """Creates and saves a new ticket."""
-        if not owner:
-            raise ValueError('Enter an owner.')
         if not ticket_type:
             raise ValueError('Enter a ticket type.')
         if ticket_type.tickets_remaining >= 1:
             ticket_type.tickets_remaining -= 1
-            # ADD STRIPE PROCESS HERE & GIVE OPTION TO PAY WITH CREDIT
             ticket = Ticket.objects.create(
-                owner=owner,
-                ticket_type=ticket_type,
-                **extra_fields
-            )
-            promoter = ticket_type.event.promoter
-            credit = promoter.credit + ticket_type.price
-            promoter.credit = credit
-            ticket_type.save(using=self._db)
-            ticket.save(using=self._db)
-            promoter.save(using=self._db)
-            Email('ticket', owner.email).send()
-            # TICKET_SOLD EMAIL TO PROMOTER
-        else:
-            raise ValueError(
-                'Enter a ticket type that still has tickets remaining.'
-            )
-        return ticket
-
-
-class VoucherManager(BaseUserManager):
-
-    def create_voucher(self, ticket_type, **extra_fields):
-        """Creates and saves a new ticket."""
-        if not ticket_type:
-            raise ValueError('Enter a ticket type.')
-        if ticket_type.tickets_remaining >= 1:
-            ticket_type.tickets_remaining -= 1
-            voucher = Voucher.objects.create(
                 ticket_type=ticket_type,
                 **extra_fields
             )
@@ -275,15 +244,15 @@ class VoucherManager(BaseUserManager):
             credit = promoter.credit - ticket_type.price
             promoter.credit = credit
             ticket_type.save(using=self._db)
-            voucher.save(using=self._db)
+            ticket.save(using=self._db)
             promoter.save(using=self._db)
-            voucher.code = create_code(voucher.pk)
-            voucher.save(using=self._db)
+            ticket.code = create_code(ticket.pk)
+            ticket.save(using=self._db)
         else:
             raise ValueError(
                 'Enter a ticket type that still has tickets remaining.'
             )
-        return voucher
+        return ticket
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -349,7 +318,12 @@ class Artist(User, PermissionsMixin):
 
     def total_points(self):
         """Count the number of votes for this artist."""
-        return Ticket.objects.filter(vote__artist=self).count()
+        points = 0
+        for ticket in Ticket.objects.filter(vote__artist=self):
+            points += ticket.ticket_type.price
+        for ticket in ticket.objects.filter(vote__artist=self):
+            points += ticket.ticket_type.price
+        return points
 
 
 class Promoter(User, PermissionsMixin):
@@ -483,9 +457,14 @@ class TicketType(models.Model):
 
 
 class Ticket(models.Model):
-    """Ticket model. (better description needed)"""
+    """Ticket model. (better description needed)."""
+    code = models.CharField(max_length=6)
     owner = models.ForeignKey(
-        'User', on_delete=models.CASCADE, related_name='tickets'
+        'User',
+        on_delete=models.CASCADE,
+        related_name='tickets',
+        null=True,
+        blank=True
     )
     ticket_type = models.ForeignKey(
         'TicketType', on_delete=models.CASCADE, related_name='tickets'
@@ -498,33 +477,8 @@ class Ticket(models.Model):
         blank=True
     )
 
-    REQUIRED_FIELDS = ['owner', 'ticket_type']
+    REQUIRED_FIELDS = ['ticket_type']
     objects = TicketManager()
 
     def __str__(self):
-        return str(self.pk)
-
-
-class Voucher(models.Model):
-    """Voucher model. (better description needed)."""
-    code = models.CharField(max_length=6)
-    owner = models.ForeignKey(
-        'User',
-        on_delete=models.CASCADE,
-        related_name='vouchers',
-        null=True,
-        blank=True
-    )
-    ticket_type = models.ForeignKey(
-        'TicketType', on_delete=models.CASCADE, related_name='vouchers'
-    )
-    vote = models.ForeignKey(
-        'Tally',
-        on_delete=models.CASCADE,
-        related_name='vouchers',
-        null=True,
-        blank=True
-    )
-
-    REQUIRED_FIELDS = ['ticket_type']
-    objects = VoucherManager()
+        return str(self.code)

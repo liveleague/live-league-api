@@ -1,22 +1,21 @@
 from django_filters import rest_framework as filters
 from django.contrib.auth import get_user_model
-from django.db.models import Count
+from django.db.models import Count, Sum, F
 
 from rest_framework import filters as rest_filters
 from rest_framework import generics, authentication, serializers
 from rest_framework.permissions import IsAuthenticated
 
 from core.models import Artist, Promoter, Venue, Event, Tally, TicketType, \
-                        Ticket, Voucher
+                        Ticket
 from core.email import Email
 from league.permissions import IsVerifiedPromoter, IsPromoterOrReadOnly, \
                                IsOwner
 from league.serializers import CreateVenueSerializer, VenueSerializer, \
                                CreateEventSerializer, CreateTicketSerializer, \
-                               CreateVoucherSerializer, EventSerializer, \
-                               TallySerializer, PublicTallySerializer, \
-                               TicketTypeSerializer, TicketSerializer, \
-                               VoucherSerializer, TableRowSerializer
+                               EventSerializer, TallySerializer, \
+                               PublicTallySerializer, TicketTypeSerializer, \
+                               TicketSerializer, TableRowSerializer
 
 
 class CreateVenueView(generics.CreateAPIView):
@@ -57,14 +56,10 @@ class CreateTicketView(generics.CreateAPIView):
     serializer_class = CreateTicketSerializer
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class CreateVoucherView(generics.CreateAPIView):
-    """Create a new voucher."""
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsAuthenticated, IsVerifiedPromoter,)
-    serializer_class = CreateVoucherSerializer
+        if self.request.user.is_promoter:
+            serializer.save()
+        else:
+            serializer.save(owner=self.request.user)
 
 
 class EditVenueView(generics.RetrieveUpdateDestroyAPIView):
@@ -118,13 +113,14 @@ class VoteTicketView(generics.RetrieveUpdateAPIView):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (IsAuthenticated, IsOwner,)
     queryset = Ticket.objects.all()
+    lookup_field = 'code'
 
     def get_serializer_class(self):
-        event = Ticket.objects.get(pk=self.kwargs['pk']).ticket_type.event
+        ticket = Ticket.objects.get(code=self.kwargs['code'])
+        event = ticket.ticket_type.event
 
         class VoteTicketSerializer(serializers.ModelSerializer):
             """Serializer for the ticket object when voting."""
-            id = serializers.ReadOnlyField(source='pk')
             owner = serializers.StringRelatedField()
             ticket_type = serializers.StringRelatedField()
             vote = serializers.SlugRelatedField(
@@ -134,53 +130,21 @@ class VoteTicketView(generics.RetrieveUpdateAPIView):
 
             class Meta:
                 model = Ticket
-                fields = ('id', 'owner', 'ticket_type', 'vote')
-                extra_kwargs = {
-                    'owner': {'read_only': True},
-                    'ticket_type': {'read_only': True},
-                }
-
-        return VoteTicketSerializer
-
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        owner = instance.owner
-        Email('vote', owner.email).send()
-
-
-class VoteVoucherView(generics.RetrieveUpdateAPIView):
-    """Edit a voucher (vote)."""
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    queryset = Voucher.objects.all()
-    lookup_field = 'code'
-
-    def get_serializer_class(self):
-        event = Voucher.objects.get(code=self.kwargs['code']).ticket_type.event
-
-        class VoteVoucherSerializer(serializers.ModelSerializer):
-            """Serializer for the voucher object when voting."""
-            owner = serializers.StringRelatedField()
-            ticket_type = serializers.StringRelatedField()
-            vote = serializers.SlugRelatedField(
-                queryset=Tally.objects.filter(event=event),
-                slug_field='slug'
-            )
-
-            class Meta:
-                model = Voucher
                 fields = ('code', 'owner', 'ticket_type', 'vote')
                 extra_kwargs = {
-                    'owner': {'read_only': True},
                     'code': {'read_only': True},
+                    'owner': {'read_only': True},
                     'ticket_type': {'read_only': True},
                 }
 
-        return VoteVoucherSerializer
+        if ticket.vote is None:
+            return VoteTicketSerializer
+        else:
+            return TicketSerializer
 
     def perform_update(self, serializer):
-        owner = self.request.user
-        instance = serializer.save(owner=owner)
+        instance = serializer.save(owner=self.request.user)
+        owner = instance.owner
         Email('vote', owner.email).send()
 
 
@@ -210,14 +174,6 @@ class RetrieveTicketView(generics.RetrieveAPIView):
     permission_classes = (IsAuthenticated, IsOwner,)
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
-
-
-class RetrieveVoucherView(generics.RetrieveAPIView):
-    """Retrieve a voucher."""
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsAuthenticated, IsOwner,)
-    queryset = Voucher.objects.all()
-    serializer_class = VoucherSerializer
     lookup_field = 'code'
 
 
@@ -226,6 +182,12 @@ class RetrieveTableRowView(generics.RetrieveAPIView):
     serializer_class = TableRowSerializer
     queryset = Artist.objects.all()
     lookup_field = 'slug'
+
+    def get_queryset(self):
+        return Artist.objects.all().annotate(
+            event_count=Count('tallies', distinct=True),
+            points=Sum('tallies__tickets__ticket_type__price'),
+        )
 
 
 class VenueFilter(filters.FilterSet):
@@ -380,17 +342,6 @@ class TicketFilter(filters.FilterSet):
         fields = ['ticket_type', 'vote']
 
 
-class VoucherFilter(filters.FilterSet):
-    """Defines the filter fields for ListVoucherView."""
-    code = filters.CharFilter(field_name='code', lookup_expr='icontains')
-    ticket_type = filters.ModelChoiceFilter(queryset=TicketType.objects.all())
-    vote = filters.ModelChoiceFilter(queryset=Tally.objects.all())
-
-    class Meta:
-        model = Voucher
-        fields = ['code', 'ticket_type', 'vote']
-
-
 class TableRowFilter(filters.FilterSet):
     """Defines the filter fields for ListTableRowView."""
     event_count = filters.NumberFilter(
@@ -512,24 +463,6 @@ class ListTicketView(generics.ListAPIView):
         return Ticket.objects.filter(owner=self.request.user)
 
 
-class ListVoucherView(generics.ListAPIView):
-    """List vouchers."""
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    serializer_class = VoucherSerializer
-    filter_backends = (
-        filters.DjangoFilterBackend,
-        rest_filters.SearchFilter,
-        rest_filters.OrderingFilter,
-    )
-    filterset_class = VoucherFilter
-    search_fields = ('code',)
-    ordering_fields = ('code',)
-
-    def get_queryset(self):
-        return Voucher.objects.filter(owner=self.request.user)
-
-
 class ListTableRowView(generics.ListAPIView):
     """List table rows."""
     serializer_class = TableRowSerializer
@@ -545,5 +478,5 @@ class ListTableRowView(generics.ListAPIView):
     def get_queryset(self):
         return Artist.objects.all().annotate(
             event_count=Count('tallies', distinct=True),
-            points=Count('tallies__tickets', distinct=True)
+            points=Sum('tallies__tickets__ticket_type__price'),
         )

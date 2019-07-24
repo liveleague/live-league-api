@@ -27,7 +27,13 @@ class IsPromoterOrReadOnly(permissions.BasePermission):
 
 
 class IsOwner(permissions.BasePermission):
-    """Only allows the ticket owner to view or edit object."""
+    """
+    Only allows the ticket owner to vote.
+    This only applies if the ticket is unclaimed (has no owner).
+    """
 
     def has_object_permission(self, request, view, obj):
-        return obj.owner == request.user
+        if obj.owner is not None:
+            return obj.owner == request.user
+        else:
+            return True
