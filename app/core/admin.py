@@ -17,13 +17,13 @@ verify.short_description = "Mark promoters as 'verified'"
 
 class UserAdmin(BaseUserAdmin):
     ordering = ['id']
-    list_display = ['id', 'email', 'name', 'slug']
+    list_display = ['id', 'email', 'name', 'slug', 'credit']
     list_filter = [
         'is_active', 'is_staff', 'is_superuser', 'is_artist', 'is_promoter'
     ]
     fieldsets = (
         (None, {'fields': ('email', 'password',)}),
-        (_('Personal Info'), {'fields': ('name', 'slug',)}),
+        (_('Account Info'), {'fields': ('name', 'slug', 'credit')}),
         (
             _('Contact Info'),
             {
@@ -65,7 +65,7 @@ class UserAdmin(BaseUserAdmin):
 class ArtistAdmin(admin.ModelAdmin):
     ordering = ['id']
     list_display = [
-        'slug', 'id', 'name', 'email', 'total_events', 'total_points'
+        'id', 'name', 'email', 'total_events', 'total_points', 'slug', 'credit'
     ]
 
     def total_events(self, obj):
@@ -77,7 +77,7 @@ class ArtistAdmin(admin.ModelAdmin):
 
 class PromoterAdmin(admin.ModelAdmin):
     ordering = ['id']
-    list_display = ['slug', 'id', 'name', 'email', 'is_verified']
+    list_display = ['id', 'name', 'email', 'is_verified', 'slug', 'credit']
     actions = [verify]
 
 

@@ -74,9 +74,9 @@ class Email(object):
             email.template_id = self.template_id
             try:
                 sg = SendGridAPIClient(self.api_key).send(email)
-                print('Email sent:', str(sg))
+                print('Email(s) sent to:', self.to_emails)
             except Exception as e:
-                print('Email failed:', str(e))
+                print('Email(s) failed:', str(e))
             message = self.Message.objects.create_message(
                 self.subject, self.text
             )

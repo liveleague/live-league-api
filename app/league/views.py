@@ -57,7 +57,7 @@ class CreateTicketView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         if self.request.user.is_promoter:
-            serializer.save()
+            serializer.save(owner=None)
         else:
             serializer.save(owner=self.request.user)
 

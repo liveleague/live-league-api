@@ -230,28 +230,44 @@ class TicketTypeManager(BaseUserManager):
 
 class TicketManager(BaseUserManager):
 
-    def create_ticket(self, ticket_type, **extra_fields):
+    def create_ticket(self, owner, ticket_type, **extra_fields):
         """Creates and saves a new ticket."""
         if not ticket_type:
             raise ValueError('Enter a ticket type.')
-        if ticket_type.tickets_remaining >= 1:
-            ticket_type.tickets_remaining -= 1
+        if ticket_type.tickets_remaining < 0:
+            raise ValueError(
+                'Insufficient tickets remaining.'
+            )
+        promoter = ticket_type.event.promoter
+        if owner is not None:
+            issuer = owner
+        else:
+            issuer = promoter
+        if ticket_type.price > issuer.credit:
+            raise ValueError(
+                'Insufficient credit.'
+            )
+        issuer.credit = issuer.credit - ticket_type.price
+        if owner is not None:
+            promoter.credit = promoter.credit + ticket_type.price
+            ticket = Ticket.objects.create(
+                ticket_type=ticket_type,
+                owner=owner,
+                **extra_fields
+            )
+        else:
             ticket = Ticket.objects.create(
                 ticket_type=ticket_type,
                 **extra_fields
             )
-            promoter = ticket_type.event.promoter
-            credit = promoter.credit - ticket_type.price
-            promoter.credit = credit
-            ticket_type.save(using=self._db)
-            ticket.save(using=self._db)
+        ticket_type.save(using=self._db)
+        ticket.save(using=self._db)
+        issuer.save(using=self._db)
+        ticket.code = create_code(ticket.pk)
+        ticket.save(using=self._db)
+        if owner is not None:
             promoter.save(using=self._db)
-            ticket.code = create_code(ticket.pk)
-            ticket.save(using=self._db)
-        else:
-            raise ValueError(
-                'Enter a ticket type that still has tickets remaining.'
-            )
+            Email('ticket', owner.email).send()
         return ticket
 
 
@@ -320,8 +336,6 @@ class Artist(User, PermissionsMixin):
         """Count the number of votes for this artist."""
         points = 0
         for ticket in Ticket.objects.filter(vote__artist=self):
-            points += ticket.ticket_type.price
-        for ticket in ticket.objects.filter(vote__artist=self):
             points += ticket.ticket_type.price
         return points
 
