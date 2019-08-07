@@ -103,3 +103,6 @@ sendgrid.env
 
 # Static files
 /app/static
+
+# Media files
+/app/media
