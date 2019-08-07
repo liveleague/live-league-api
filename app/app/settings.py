@@ -25,7 +25,7 @@ SECRET_KEY = 'zg(msr17w(7nkj!t9dw)pc#&7ob2*9yq*z7#_a0q)h$vbudml&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'web']
 
 
 # Application definition
@@ -129,8 +129,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = '/vol/web/static'
-MEDIA_ROOT = '/vol/web/media'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 
 # Custom user model

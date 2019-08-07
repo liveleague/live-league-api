@@ -13,11 +13,11 @@ from hashids import Hashids
 from core.email import Email
 
 
-def recipe_image_file_path(instance, filename):
-    """Generate file path for new recipe image."""
+def image_file_path(instance, filename):
+    """Generate file path for new image."""
     ext = filename.split('.')[-1]
     filename = f'{uuid.uuid4()}.{ext}'
-    return os.path.join('uploads/recipe/', filename)
+    return os.path.join('uploads/', filename)
 
 
 def signup_check(email, password, name):
@@ -280,7 +280,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     credit = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     email = models.EmailField(max_length=255, unique=True)
     image = models.ImageField(
-        null=True, blank=True, upload_to=recipe_image_file_path
+        null=True, blank=True, upload_to=image_file_path
     )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
