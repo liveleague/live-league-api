@@ -100,3 +100,6 @@ ENV/
 
 .vagrant
 sendgrid.env
+
+# Static files
+/app/static
