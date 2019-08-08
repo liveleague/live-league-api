@@ -12,7 +12,6 @@ WORKDIR /app
 COPY . /app
 
 RUN mkdir -p /media
-RUN mkdir -p /static
 RUN groupadd varwwwusers
 RUN adduser www-data varwwwusers
 RUN chgrp -R varwwwusers /media/
