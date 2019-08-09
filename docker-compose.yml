@@ -35,13 +35,16 @@ services:
     depends_on:
       - db
   db:
-    image: postgres:11-alpine
+    image: postgres:11
     container_name: ps01
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     environment:
+      - PGDATA=/var/lib/postgresql/data
       - POSTGRES_DB=app
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=supersecretpassword
-
 volumes:
   django-static:
   django-media:
+  pgdata:
