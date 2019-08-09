@@ -6,19 +6,19 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
+      - ./app:/home/app
       - ./config/nginx:/etc/nginx/conf.d
-      - django-static:/static
-      - django-media:/media
+      - django-static:/home/static
+      - django-media:/home/app/media
     depends_on:
       - web
   web:
     build: .
     container_name: dg01
     volumes:
-      - ./app:/app
-      - django-static:/static
-      - django-media:/media
+      - ./app:/home/app
+      - django-static:/home/static
+      - django-media:/home/app/media
     expose:
       - "8000"
     command: >
