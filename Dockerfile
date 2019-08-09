@@ -10,9 +10,5 @@ RUN pip install -r /home/config/requirements.txt
 RUN mkdir /home/app
 WORKDIR /home/app
 COPY . /home/app
-
-RUN mkdir -p /home/app/media
-RUN groupadd varwwwusers
-RUN adduser www-data varwwwusers
-RUN chgrp -R varwwwusers /home/app/media
-RUN chmod -R 770 /home/app/media
+RUN chmod g+s /home/app
+RUN chmod -R o+rX /home/app
