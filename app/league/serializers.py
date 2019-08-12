@@ -190,6 +190,7 @@ class TicketSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     """Serializer for the event object."""
     id = serializers.ReadOnlyField(source='pk')
+    city = serializers.ReadOnlyField(source='venue.address_city')
     lineup = LineupSerializer(many=True, read_only=True)
     promoter = serializers.ReadOnlyField(source='promoter.name')
     ticket_types = TicketTypeEventSerializer(many=True, read_only=True)
@@ -201,7 +202,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = (
-            'description', 'end_date', 'end_time', 'id',
+            'city', 'description', 'end_date', 'end_time', 'id',
             'lineup', 'name', 'promoter', 'start_date', 'start_time',
             'ticket_types', 'tickets_sold', 'venue'
         )

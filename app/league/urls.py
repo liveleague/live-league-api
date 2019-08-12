@@ -5,8 +5,16 @@ from league import views
 app_name = 'league'
 
 urlpatterns = [
-    path('create/venue/', views.CreateVenueView.as_view(), name='create-venue'),
-    path('create/event/', views.CreateEventView.as_view(), name='create-event'),
+    path(
+        'create/venue/',
+        views.CreateVenueView.as_view(),
+        name='create-venue'
+    ),
+    path(
+        'create/event/',
+        views.CreateEventView.as_view(),
+        name='create-event'
+    ),
     path('create/tally/', views.CreateTallyView.as_view(), name='create-tally'),
     path(
         'create/ticket-type/',
