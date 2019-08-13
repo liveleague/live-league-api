@@ -91,23 +91,16 @@ class ArtistSerializer(serializers.ModelSerializer):
 
 class PublicArtistSerializer(serializers.ModelSerializer):
     """Public serializer for the artist object."""
-    events = serializers.SerializerMethodField()
-    points = serializers.SerializerMethodField()
+    event_count = serializers.IntegerField(read_only=True)
+    points = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Artist
         fields = (
-            'name', 'slug', 'description', 'events', 'points', 'facebook',
+            'name', 'slug', 'description', 'event_count', 'points', 'facebook',
             'instagram', 'soundcloud', 'spotify', 'twitter', 'website',
             'youtube', 'image'
         )
-
-    def get_events(self, obj):
-        return obj.tallies.count()
-
-    def get_points(self, obj):
-        tickets = Ticket.objects.filter(vote__artist=obj)
-        return tickets.count()
 
 
 class PromoterSerializer(serializers.ModelSerializer):

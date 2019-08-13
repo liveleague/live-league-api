@@ -294,7 +294,9 @@ class EventFilter(filters.FilterSet):
 
 class TallyFilter(filters.FilterSet):
     """Defines the filter fields for ListTallyView."""
-    artist = filters.ModelChoiceFilter(queryset=Artist.objects.all())
+    artist = filters.ModelChoiceFilter(
+        queryset=Artist.objects.all(), to_field_name='slug'
+    )
     event = filters.ModelChoiceFilter(queryset=Event.objects.all())
 
     class Meta:
@@ -425,6 +427,11 @@ class ListTallyView(generics.ListAPIView):
         rest_filters.OrderingFilter,
     )
     filterset_class = TallyFilter
+
+    def get_queryset(self):
+        return Tally.objects.all().annotate(
+            points=Sum('tickets__ticket_type__price'),
+        )
 
 
 class ListTicketTypeView(generics.ListAPIView):

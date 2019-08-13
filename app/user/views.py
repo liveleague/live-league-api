@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Count, Sum, F, Q
 
 from rest_framework import filters as rest_filters
 from rest_framework import generics, authentication, permissions, viewsets, \
@@ -81,9 +81,14 @@ class ManageUserView(generics.RetrieveUpdateDestroyAPIView):
 
 class RetrieveArtistView(generics.RetrieveAPIView):
     """Retrieve an artist."""
-    queryset = Artist.objects.all()
     serializer_class = PublicArtistSerializer
     lookup_field = 'slug'
+
+    def get_queryset(self):
+        return Artist.objects.all().annotate(
+            event_count=Count('tallies', distinct=True),
+            points=Sum('tallies__tickets__ticket_type__price'),
+        )
 
 
 class RetrievePromoterView(generics.RetrieveAPIView):

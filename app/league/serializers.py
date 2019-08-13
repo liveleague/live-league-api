@@ -94,14 +94,11 @@ class PublicTallySerializer(serializers.ModelSerializer):
     artist = serializers.SlugRelatedField(
         queryset=Artist.objects.all(), slug_field='name'
     )
-    votes = serializers.SerializerMethodField()
+    points = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Tally
-        fields = ('artist', 'event', 'votes')
-
-    def get_votes(self, obj):
-        return obj.tickets.count()
+        fields = ('artist', 'event', 'points')
 
 
 class LineupSerializer(serializers.ModelSerializer):
