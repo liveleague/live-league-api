@@ -30,7 +30,7 @@ class VenueSerializer(serializers.ModelSerializer):
         fields = (
             'address_city', 'address_country', 'address_line1',
             'address_line2', 'address_state', 'address_zip',
-            'description', 'name'
+            'description', 'name', 'slug'
         )
 
     def update(self, instance, validated_data):
@@ -193,18 +193,20 @@ class EventSerializer(serializers.ModelSerializer):
     city = serializers.ReadOnlyField(source='venue.address_city')
     lineup = LineupSerializer(many=True, read_only=True)
     promoter = serializers.ReadOnlyField(source='promoter.name')
+    promoter_slug = serializers.ReadOnlyField(source='promoter.slug')
     ticket_types = TicketTypeEventSerializer(many=True, read_only=True)
     tickets_sold = serializers.SerializerMethodField()
     venue = serializers.SlugRelatedField(
         queryset=Venue.objects.all(), slug_field='name'
     )
+    venue_slug = serializers.ReadOnlyField(source='venue.slug')
 
     class Meta:
         model = Event
         fields = (
             'city', 'description', 'end_date', 'end_time', 'id',
-            'lineup', 'name', 'promoter', 'start_date', 'start_time',
-            'ticket_types', 'tickets_sold', 'venue'
+            'lineup', 'name', 'promoter', 'promoter_slug', 'start_date',
+            'start_time', 'ticket_types', 'tickets_sold', 'venue', 'venue_slug'
         )
         read_only_fields = ('id',)
 
@@ -233,4 +235,4 @@ class TableRowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Artist
-        fields = ('name', 'event_count', 'points')
+        fields = ('event_count', 'name', 'points', 'slug')

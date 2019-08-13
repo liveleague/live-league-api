@@ -97,8 +97,9 @@ class PublicArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = (
-            'name', 'description', 'events', 'points', 'facebook', 'instagram',
-            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
+            'name', 'slug', 'description', 'events', 'points', 'facebook',
+            'instagram', 'soundcloud', 'spotify', 'twitter', 'website',
+            'youtube', 'image'
         )
 
     def get_events(self, obj):
@@ -145,8 +146,8 @@ class PublicPromoterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promoter
         fields = (
-            'name', 'description', 'facebook', 'instagram', 'soundcloud',
-            'spotify', 'twitter', 'website', 'youtube', 'image'
+            'name', 'slug', 'description', 'facebook', 'instagram',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
         )
 
 
