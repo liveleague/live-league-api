@@ -256,7 +256,9 @@ class EventFilter(filters.FilterSet):
     )
     lineup = filters.ModelChoiceFilter(queryset=Tally.objects.all())
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
-    promoter = filters.ModelChoiceFilter(queryset=Promoter.objects.all())
+    promoter = filters.ModelChoiceFilter(
+        queryset=Promoter.objects.all(), to_field_name='slug'
+    )
     start_date = filters.DateFilter(
         field_name='start_date', lookup_expr='exact'
     )
@@ -282,7 +284,9 @@ class EventFilter(filters.FilterSet):
         field_name='start_time', lookup_expr='range'
     )
     ticket_types = filters.ModelChoiceFilter(queryset=TicketType.objects.all())
-    venue = filters.ModelChoiceFilter(queryset=Venue.objects.all())
+    venue = filters.ModelChoiceFilter(
+        queryset=Venue.objects.all(), to_field_name='slug'
+    )
 
     class Meta:
         model = Event

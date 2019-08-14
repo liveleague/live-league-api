@@ -30,7 +30,7 @@ class VenueSerializer(serializers.ModelSerializer):
         fields = (
             'address_city', 'address_country', 'address_line1',
             'address_line2', 'address_state', 'address_zip',
-            'description', 'name', 'slug'
+            'description', 'google_maps', 'image', 'name', 'slug'
         )
 
     def update(self, instance, validated_data):
@@ -94,11 +94,18 @@ class PublicTallySerializer(serializers.ModelSerializer):
     artist = serializers.SlugRelatedField(
         queryset=Artist.objects.all(), slug_field='name'
     )
+    event = serializers.ReadOnlyField(source='event.name')
+    event_id = serializers.ReadOnlyField(source='event.pk')
+    event_start_date = serializers.ReadOnlyField(source='event.start_date')
+    event_start_time = serializers.ReadOnlyField(source='event.start_time')
     points = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Tally
-        fields = ('artist', 'event', 'points')
+        fields = (
+            'artist', 'event', 'event_id', 'event_start_date',
+            'event_start_time', 'points'
+        )
 
 
 class LineupSerializer(serializers.ModelSerializer):
@@ -187,7 +194,6 @@ class TicketSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     """Serializer for the event object."""
     id = serializers.ReadOnlyField(source='pk')
-    city = serializers.ReadOnlyField(source='venue.address_city')
     lineup = LineupSerializer(many=True, read_only=True)
     promoter = serializers.ReadOnlyField(source='promoter.name')
     promoter_slug = serializers.ReadOnlyField(source='promoter.slug')
@@ -196,14 +202,19 @@ class EventSerializer(serializers.ModelSerializer):
     venue = serializers.SlugRelatedField(
         queryset=Venue.objects.all(), slug_field='name'
     )
+    venue_city = serializers.ReadOnlyField(source='venue.address_city')
+    venue_google_maps = serializers.ReadOnlyField(
+        source='venue.google_maps'
+    )
     venue_slug = serializers.ReadOnlyField(source='venue.slug')
 
     class Meta:
         model = Event
         fields = (
-            'city', 'description', 'end_date', 'end_time', 'id',
-            'lineup', 'name', 'promoter', 'promoter_slug', 'start_date',
-            'start_time', 'ticket_types', 'tickets_sold', 'venue', 'venue_slug'
+            'description', 'end_date', 'end_time', 'id', 'image', 'lineup',
+            'name', 'promoter', 'promoter_slug', 'start_date', 'start_time',
+            'ticket_types', 'tickets_sold', 'venue', 'venue_city',
+            'venue_google_maps', 'venue_slug'
         )
         read_only_fields = ('id',)
 

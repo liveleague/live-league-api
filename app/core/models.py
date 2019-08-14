@@ -402,6 +402,10 @@ class Venue(models.Model):
     address_state = models.CharField(max_length=255, blank=True)
     address_zip = models.CharField(max_length=255)
     description = models.CharField(max_length=1000, blank=True)
+    google_maps = models.CharField(max_length=1000, blank=True)
+    image = models.ImageField(
+        null=True, blank=True, upload_to=image_file_path
+    )
     name = models.CharField(max_length=255)
     slug = models.SlugField()
 
@@ -417,6 +421,9 @@ class Event(models.Model):
     description = models.CharField(max_length=1000, blank=True)
     end_date = models.DateField()
     end_time = models.TimeField()
+    image = models.ImageField(
+        null=True, blank=True, upload_to=image_file_path
+    )
     name = models.CharField(max_length=255)
     promoter = models.ForeignKey(
         'Promoter', on_delete=models.CASCADE, related_name='events'
