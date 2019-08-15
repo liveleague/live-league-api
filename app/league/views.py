@@ -157,15 +157,23 @@ class RetrieveVenueView(generics.RetrieveAPIView):
 
 class RetrieveEventView(generics.RetrieveAPIView):
     """Retrieve an event."""
-    queryset = Event.objects.all()
     serializer_class = EventSerializer
+
+    def get_queryset(self):
+        return Event.objects.all().annotate(
+            points=Sum('ticket_types__price'),
+        )
 
 
 class RetrieveTallyView(generics.RetrieveAPIView):
     """Retrieve a tally."""
-    queryset = Tally.objects.all()
     serializer_class = PublicTallySerializer
     lookup_field = 'slug'
+
+    def get_queryset(self):
+        return Tally.objects.all().annotate(
+            points=Sum('tickets__ticket_type__price'),
+        )
 
 
 class RetrieveTicketView(generics.RetrieveAPIView):
@@ -403,7 +411,6 @@ class ListVenueView(generics.ListAPIView):
 
 class ListEventView(generics.ListAPIView):
     """List events."""
-    queryset = Event.objects.all().order_by('pk')
     serializer_class = EventSerializer
     filter_backends = (
         filters.DjangoFilterBackend,
@@ -419,6 +426,11 @@ class ListEventView(generics.ListAPIView):
         'description', 'end_date', 'end_time', 'name', 'start_date',
         'start_time'
     )
+
+    def get_queryset(self):
+        return Event.objects.all().annotate(
+            points=Sum('ticket_types__price'),
+        )
 
 
 class ListTallyView(generics.ListAPIView):
