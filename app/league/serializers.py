@@ -104,7 +104,7 @@ class PublicTallySerializer(serializers.ModelSerializer):
         model = Tally
         fields = (
             'artist', 'event', 'event_id', 'event_start_date',
-            'event_start_time', 'points'
+            'event_start_time', 'points', 'slug'
         )
 
 
@@ -112,10 +112,11 @@ class LineupSerializer(serializers.ModelSerializer):
     """Serializer for the tally object when called from EventSerializer."""
     artist = serializers.ReadOnlyField(source='artist.name')
     artist_slug = serializers.ReadOnlyField(source='artist.slug')
+    tally = serializers.ReadOnlyField(source='slug')
 
     class Meta:
         model = Tally
-        fields = ('artist', 'artist_slug')
+        fields = ('artist', 'artist_slug', 'tally')
 
 
 class TicketTypeSerializer(serializers.ModelSerializer):
@@ -123,7 +124,7 @@ class TicketTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TicketType
-        fields = ('event', 'name', 'price', 'tickets_remaining')
+        fields = ('event', 'name', 'price', 'tickets_remaining', 'slug')
 
     def __init__(self, *args, **kwargs):
         super(TicketTypeSerializer, self).__init__(*args, **kwargs)
@@ -142,7 +143,7 @@ class TicketTypeEventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TicketType
-        fields = ('name', 'price', 'tickets_remaining')
+        fields = ('name', 'price', 'tickets_remaining', 'slug')
 
 
 class CreateTicketSerializer(serializers.ModelSerializer):
@@ -169,15 +170,30 @@ class CreateTicketSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     """Serializer for the ticket object."""
+    event = serializers.ReadOnlyField(source='ticket_type.event.name')
+    event_id = serializers.ReadOnlyField(source='ticket_type.event.id')
+    event_start_date = serializers.ReadOnlyField(
+        source='ticket_type.event.start_date'
+    )
+    event_start_time = serializers.ReadOnlyField(
+        source='ticket_type.event.start_time'
+    )
     owner = serializers.StringRelatedField()
-    ticket_type = serializers.StringRelatedField()
+    ticket_type = serializers.ReadOnlyField(source='ticket_type.name')
+    ticket_type_slug = serializers.ReadOnlyField(source='ticket_type.slug')
     vote = serializers.SlugRelatedField(
         slug_field='slug', read_only=True
     )
+    vote_artist = serializers.ReadOnlyField(source='vote.artist.name')
+    vote_slug = serializers.ReadOnlyField(source='vote.artist.slug')
 
     class Meta:
         model = Ticket
-        fields = ('code', 'owner', 'ticket_type', 'vote')
+        fields = (
+            'event', 'event_id', 'event_start_date', 'event_start_time',
+            'code', 'owner', 'ticket_type', 'ticket_type_slug', 'vote',
+            'vote_artist', 'vote_slug'
+        )
         extra_kwargs = {
             'code': {'read_only': True},
             'owner': {'read_only': True},

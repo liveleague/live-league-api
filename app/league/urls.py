@@ -50,6 +50,11 @@ urlpatterns = [
     path('tally/<slug>/', views.RetrieveTallyView.as_view(), name='tally'),
     path('ticket/<code>/', views.RetrieveTicketView.as_view(), name='ticket'),
     path(
+        'ticket-type/<slug>/',
+        views.RetrieveTicketTypeView.as_view(),
+        name='ticket-type'
+    ),
+    path(
         'table-row/<slug>/',
         views.RetrieveTableRowView.as_view(),
         name='table-row'

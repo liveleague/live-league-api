@@ -15,7 +15,8 @@ from league.serializers import CreateVenueSerializer, VenueSerializer, \
                                CreateEventSerializer, CreateTicketSerializer, \
                                EventSerializer, TallySerializer, \
                                PublicTallySerializer, TicketTypeSerializer, \
-                               TicketSerializer, TableRowSerializer
+                               TicketTypeEventSerializer, TicketSerializer, \
+                               TableRowSerializer
 
 
 class CreateVenueView(generics.CreateAPIView):
@@ -179,10 +180,17 @@ class RetrieveTallyView(generics.RetrieveAPIView):
 class RetrieveTicketView(generics.RetrieveAPIView):
     """Retrieve a ticket."""
     authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (IsAuthenticated, IsOwner,)
+    permission_classes = (IsOwner,)
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
     lookup_field = 'code'
+
+
+class RetrieveTicketTypeView(generics.RetrieveAPIView):
+    """Retrieve a ticket type."""
+    queryset = TicketType.objects.all()
+    serializer_class = TicketTypeEventSerializer
+    lookup_field = 'slug'
 
 
 class RetrieveTableRowView(generics.RetrieveAPIView):

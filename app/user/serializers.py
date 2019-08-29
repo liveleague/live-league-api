@@ -36,14 +36,17 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            'credit', 'email', 'password', 'name', 'address_city',
-            'address_country', 'address_line1', 'address_line2',
-            'address_state', 'address_zip', 'facebook', 'instagram', 'phone',
-            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
+            'credit', 'email', 'id', 'password', 'name', 'slug', 'is_artist',
+            'is_promoter', 'address_city', 'address_country', 'address_line1',
+            'address_line2', 'address_state', 'address_zip', 'facebook',
+            'instagram', 'phone', 'soundcloud', 'spotify', 'twitter',
+            'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 5},
             'credit': {'read_only': True},
+            'is_artist': {'read_only': True},
+            'is_promoter': {'read_only': True},
         }
 
     def create(self, validated_data):
@@ -66,13 +69,15 @@ class ArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = (
-            'credit', 'email', 'password', 'name', 'description', 'facebook',
-            'instagram', 'phone', 'soundcloud', 'spotify', 'twitter',
-            'website', 'youtube', 'image'
+            'credit', 'email', 'id', 'password', 'name', 'slug', 'is_artist',
+            'is_promoter', 'description', 'facebook', 'instagram', 'phone',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 5},
             'credit': {'read_only': True},
+            'is_artist': {'read_only': True},
+            'is_promoter': {'read_only': True},
         }
 
     def create(self, validated_data):
@@ -97,9 +102,9 @@ class PublicArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = (
-            'name', 'slug', 'description', 'event_count', 'points', 'facebook',
-            'instagram', 'soundcloud', 'spotify', 'twitter', 'website',
-            'youtube', 'image'
+            'name', 'slug', 'description', 'event_count', 'id', 'points',
+            'facebook', 'instagram', 'soundcloud', 'spotify', 'twitter',
+            'website', 'youtube', 'image'
         )
 
 
@@ -109,14 +114,17 @@ class PromoterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promoter
         fields = (
-            'credit', 'email', 'password', 'name', 'description',
-            'is_verified', 'facebook', 'instagram', 'phone', 'soundcloud',
-            'spotify', 'twitter', 'website', 'youtube', 'image'
+            'credit', 'email', 'id', 'password', 'name', 'slug', 'is_artist',
+            'is_promoter', 'is_verified', 'description', 'facebook',
+            'instagram', 'phone', 'soundcloud', 'spotify', 'twitter',
+            'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 5},
             'is_verified': {'read_only': True},
             'credit': {'read_only': True},
+            'is_artist': {'read_only': True},
+            'is_promoter': {'read_only': True},
         }
 
     def create(self, validated_data):
@@ -139,7 +147,7 @@ class PublicPromoterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promoter
         fields = (
-            'name', 'slug', 'description', 'facebook', 'instagram',
+            'name', 'slug', 'description', 'id', 'facebook', 'instagram',
             'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
         )
 

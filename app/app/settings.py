@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'core',
     'league',
-    'user',
+    'superuser',
+    'user'
 ]
 
 MIDDLEWARE = [
