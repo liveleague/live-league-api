@@ -4,14 +4,22 @@ services:
     image: nginx:latest
     container_name: ng01
     ports:
-      - "8000:8000"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./app:/home/app
       - ./config/nginx:/etc/nginx/conf.d
       - django-static:/home/static
       - django-media:/home/app/media
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
     depends_on:
       - web
+  #certbot:
+  #  image: certbot/certbot
+  #  volumes:
+  #  - ./data/certbot/conf:/etc/letsencrypt
+  #  - ./data/certbot/www:/var/www/certbot
   web:
     build: .
     container_name: dg01

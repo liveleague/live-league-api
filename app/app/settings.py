@@ -22,8 +22,10 @@ SECRET_KEY = 'zg(msr17w(7nkj!t9dw)pc#&7ob2*9yq*z7#_a0q)h$vbudml&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'web', '46.101.31.33']
-
+ALLOWED_HOSTS = [
+    '127.0.0.1', 'web', '46.101.31.33', 'api.liveleague.events',
+    'www.api.liveleague.events'
+]
 
 # Application definition
 
@@ -121,6 +123,13 @@ USE_L10N = True
 
 USE_TZ = True
 
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
+
+SECURITY_MIDDLEWARE = ['django.middleware.security.SecurityMiddleware']
+MIDDLEWARE = SECURITY_MIDDLEWARE + MIDDLEWARE
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
