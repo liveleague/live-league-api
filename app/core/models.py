@@ -247,6 +247,7 @@ class TicketManager(BaseUserManager):
             raise ValueError(
                 'Insufficient credit.'
             )
+        ticket_type.tickets_remaining -= 1
         issuer.credit = issuer.credit - ticket_type.price
         if owner is not None:
             promoter.credit = promoter.credit + ticket_type.price
