@@ -12,7 +12,7 @@ class Email(object):
     Constructs a transaction email and message
     to one user based on system events.
     """
-    def __init__(self, template_name, to_emails):
+    def __init__(self, template_name, to_emails, dynamic_template_data=None):
         self.api_key = (
             'SG.IjdbYqf4R0G3L5cHp1JxCQ.VhvjRtUSx'
             'X5BAH39hKuVGpYi_lhpRZW-t9st6mxEGvA'
@@ -74,6 +74,8 @@ class Email(object):
             self.to_emails = to_emails
         else:
             self.to_emails = to_emails.split()
+        if dynamic_template_data:
+            self.dynamic_template_data = dynamic_template_data
         self.Message = apps.get_model('core', 'Message')
         self.ReadFlag = apps.get_model('core', 'ReadFlag')
 
@@ -85,6 +87,8 @@ class Email(object):
                 to_emails=address,
             )
             email.template_id = self.template_id
+            if self.dynamic_template_data:
+                email.dynamic_template_data = self.dynamic_template_data
             try:
                 sg = SendGridAPIClient(self.api_key).send(email)
                 print('Email(s) sent to:', self.to_emails)

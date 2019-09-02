@@ -268,7 +268,8 @@ class TicketManager(BaseUserManager):
         ticket.save(using=self._db)
         if owner is not None:
             promoter.save(using=self._db)
-            Email('ticket', owner.email).send()
+            dynamic_template_data = {'code': ticket.code}
+            Email('ticket', owner.email, dynamic_template_data).send()
         return ticket
 
 
