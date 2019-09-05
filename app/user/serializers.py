@@ -43,6 +43,7 @@ class UserSerializer(serializers.ModelSerializer):
             'website', 'youtube', 'image'
         )
         extra_kwargs = {
+            'slug': {'read_only': True},
             'password': {'write_only': True, 'min_length': 5},
             'credit': {'read_only': True},
             'is_artist': {'read_only': True},
@@ -74,6 +75,7 @@ class ArtistSerializer(serializers.ModelSerializer):
             'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
         )
         extra_kwargs = {
+            'slug': {'read_only': True},
             'password': {'write_only': True, 'min_length': 5},
             'credit': {'read_only': True},
             'is_artist': {'read_only': True},
@@ -120,6 +122,7 @@ class PromoterSerializer(serializers.ModelSerializer):
             'website', 'youtube', 'image'
         )
         extra_kwargs = {
+            'slug': {'read_only': True},
             'password': {'write_only': True, 'min_length': 5},
             'is_verified': {'read_only': True},
             'credit': {'read_only': True},

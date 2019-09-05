@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from django_filters import rest_framework as filters
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Sum, F, Q
+from django.db.models import Count, Sum, Q, F, Case, When, IntegerField
 
 from rest_framework import filters as rest_filters
 from rest_framework import generics, authentication, permissions, viewsets, \
@@ -85,11 +87,30 @@ class RetrieveArtistView(generics.RetrieveAPIView):
     lookup_field = 'slug'
 
     def get_queryset(self):
+        today = datetime.today()
+        time = datetime.now().time()
         return Artist.objects.all().annotate(
-            event_count=Count('tallies', distinct=True),
-            points=Sum('tallies__tickets__ticket_type__price'),
+            event_count=Count(
+                Case(
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
+                        )
+                    ), then=1),
+                    output_field=IntegerField(),
+                )
+            ),
+            points=Sum(
+                Case(
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
+                        )
+                    ), then=F('tallies__tickets__ticket_type__price')),
+                    output_field=IntegerField(),
+                )
+            )
         )
-
 
 class RetrievePromoterView(generics.RetrieveAPIView):
     """Retrieve a promoter."""

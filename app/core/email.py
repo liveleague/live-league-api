@@ -54,7 +54,16 @@ class Email(object):
             self.from_email = 'sales@liveleague.events'
             self.template_id = 'd-5089e73b4c8644d4be176c24cd1b18d7'
             self.subject = 'Your ticket has been purchased!'
-            self.text = '<insert ticket message here>'
+            self.text = '''
+                        You've got a ticket!\n
+                        Don't forget to vote for your favourite artist\n
+                        Win £100 in our social media contest:\n
+                        Add @_liveleague on Instagram or Twitter\n
+                        Mention @_liveleague in a post\n
+                        Post of the month wins £100!\n
+                        All of your past and upcoming tickets can be viewed
+                        in your account.\n
+                        '''
         elif template_name == 'artist_added':
             self.from_email = 'support@liveleague.events'
             self.template_id = 'd-9eb52223f95248228a9e6c37bdf20a25'
@@ -69,13 +78,26 @@ class Email(object):
             self.from_email = 'sales@liveleague.events'
             self.template_id = 'd-e62412bc6e6f492390d83a2284a6bd24'
             self.subject = 'Your vote has been cast!'
-            self.text = '<insert vote message here>'
+            self.text = '''
+                        Your vote has been cast!\n
+                        We'll keep you updated on your favourite artist's
+                        upcoming events.\n
+                        '''
+        elif template_name == 'password_reset':
+            self.from_email = 'support@liveleague.events'
+            self.template_id = 'd-4d6b0323c76d4ff28c55522b7db760b2'
+            self.subject = 'Reset your password'
+            self.text = '''
+                        Please check your emails for a password reset link.
+                        '''
         if isinstance(to_emails, list):
             self.to_emails = to_emails
         else:
             self.to_emails = to_emails.split()
         if dynamic_template_data:
             self.dynamic_template_data = dynamic_template_data
+        else:
+            self.dynamic_template_data = None
         self.Message = apps.get_model('core', 'Message')
         self.ReadFlag = apps.get_model('core', 'ReadFlag')
 

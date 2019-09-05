@@ -1,11 +1,14 @@
+import random
 import uuid
 import os
+from hashlib import sha256
 
 from django.db import models
 from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
      PermissionsMixin
+from django.contrib.auth import get_user_model
 
 from phonenumber_field.modelfields import PhoneNumberField
 from hashids import Hashids

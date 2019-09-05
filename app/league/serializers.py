@@ -16,6 +16,9 @@ class CreateVenueSerializer(serializers.ModelSerializer):
             'address_line2', 'address_state', 'address_zip',
             'description', 'name'
         )
+        extra_kwargs = {
+            'slug': {'read_only': True},
+        }
 
     def create(self, validated_data):
         """Create a new venue and return it."""
@@ -59,6 +62,9 @@ class CreateEventSerializer(serializers.ModelSerializer):
             'promoter', 'venue'
         )
         read_only_fields = ('id',)
+        extra_kwargs = {
+            'slug': {'read_only': True},
+        }
 
     def create(self, validated_data):
         """Create a new event and return it."""
@@ -125,6 +131,9 @@ class TicketTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = TicketType
         fields = ('event', 'name', 'price', 'tickets_remaining', 'slug')
+        extra_kwargs = {
+            'slug': {'read_only': True},
+        }
 
     def __init__(self, *args, **kwargs):
         super(TicketTypeSerializer, self).__init__(*args, **kwargs)

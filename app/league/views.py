@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from django_filters import rest_framework as filters
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Sum, F
+from django.db.models import Count, Sum, Q, F, Case, When, IntegerField
 
 from rest_framework import filters as rest_filters
 from rest_framework import generics, authentication, serializers
@@ -161,8 +163,17 @@ class RetrieveEventView(generics.RetrieveAPIView):
     serializer_class = EventSerializer
 
     def get_queryset(self):
+        today = datetime.today()
+        time = datetime.now().time()
         return Event.objects.all().annotate(
-            points=Sum('ticket_types__price'),
+            points=Sum(
+                Case(
+                    When(Q(start_date__lt=today) | (
+                        Q(start_date=today) & Q(start_time__lte=time)
+                    ), then=F('ticket_types__price')),
+                    output_field=IntegerField(),
+                )
+            )
         )
 
 
@@ -172,8 +183,17 @@ class RetrieveTallyView(generics.RetrieveAPIView):
     lookup_field = 'slug'
 
     def get_queryset(self):
+        today = datetime.today()
+        time = datetime.now().time()
         return Tally.objects.all().annotate(
-            points=Sum('tickets__ticket_type__price'),
+            points=Sum(
+                Case(
+                    When(Q(event__start_date__lt=today) | (
+                        Q(event__start_date=today) & Q(event__start_time__lte=time)
+                    ), then=F('tickets__ticket_type__price')),
+                    output_field=IntegerField(),
+                )
+            )
         )
 
 
@@ -200,9 +220,29 @@ class RetrieveTableRowView(generics.RetrieveAPIView):
     lookup_field = 'slug'
 
     def get_queryset(self):
+        today = datetime.today()
+        time = datetime.now().time()
         return Artist.objects.all().annotate(
-            event_count=Count('tallies', distinct=True),
-            points=Sum('tallies__tickets__ticket_type__price'),
+            event_count=Count(
+                Case(
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
+                        )
+                    ), then=1),
+                    output_field=IntegerField(),
+                )
+            ),
+            points=Sum(
+                Case(
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
+                        )
+                    ), then=F('tallies__tickets__ticket_type__price')),
+                    output_field=IntegerField(),
+                )
+            )
         )
 
 
@@ -436,8 +476,17 @@ class ListEventView(generics.ListAPIView):
     )
 
     def get_queryset(self):
+        today = datetime.today()
+        time = datetime.now().time()
         return Event.objects.all().annotate(
-            points=Sum('ticket_types__price'),
+            points=Sum(
+                Case(
+                    When(Q(start_date__lt=today) | (
+                        Q(start_date=today) & Q(start_time__lte=time)
+                    ), then=F('ticket_types__price')),
+                    output_field=IntegerField(),
+                )
+            )
         )
 
 
@@ -453,8 +502,17 @@ class ListTallyView(generics.ListAPIView):
     filterset_class = TallyFilter
 
     def get_queryset(self):
+        today = datetime.today()
+        time = datetime.now().time()
         return Tally.objects.all().annotate(
-            points=Sum('tickets__ticket_type__price'),
+            points=Sum(
+                Case(
+                    When(Q(event__start_date__lt=today) | (
+                        Q(event__start_date=today) & Q(event__start_time__lte=time)
+                    ), then=F('tickets__ticket_type__price')),
+                    output_field=IntegerField(),
+                )
+            )
         )
 
 
@@ -507,7 +565,27 @@ class ListTableRowView(generics.ListAPIView):
     ordering_fields = ('event_count', 'name', 'points')
 
     def get_queryset(self):
+        today = datetime.today()
+        time = datetime.now().time()
         return Artist.objects.all().annotate(
-            event_count=Count('tallies', distinct=True),
-            points=Sum('tallies__tickets__ticket_type__price'),
+            event_count=Count(
+                Case(
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
+                        )
+                    ), then=1),
+                    output_field=IntegerField(),
+                )
+            ),
+            points=Sum(
+                Case(
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
+                        )
+                    ), then=F('tallies__tickets__ticket_type__price')),
+                    output_field=IntegerField(),
+                )
+            )
         )
