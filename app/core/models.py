@@ -1,7 +1,6 @@
-import random
 import uuid
 import os
-from hashlib import sha256
+from random import randint
 
 from django.db import models
 from django.conf import settings
@@ -32,17 +31,14 @@ def signup_check(email, password, name):
     if not name:
         raise ValueError('Enter a name.')
 
-
-def create_code(pk):
+def create_code(pk, n):
     """Helper function to create ticket codes."""
     hashids = Hashids(
         salt=settings.SECRET_KEY,
-        min_length=6,
+        min_length=n,
         alphabet='abcdefghijkmnopqrstuvwxyz123456789'
     )
-    code = ''
-    while len(code) != 6:
-        code = hashids.encode(pk)
+    code = hashids.encode(pk)[:n]
     return code
 
 
@@ -59,6 +55,29 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         Email('welcome_user', user.email).send()
         return user
+
+    def create_temporary_user(self, email, **extra_fields):
+        """Creates and saves a new temporary user."""
+        user = self.model(
+            email=self.normalize_email(email),
+            name='Temporary User',
+            is_temporary=True,
+            **extra_fields
+        )
+        password = create_code(randint(0, 1000000000000), 8)
+        user.set_password(password)
+        user.slug = 'temporary-user'
+        user.save(using=self._db)
+        dynamic_template_data = {'password': password}
+        Email(
+            'welcome_temporary_user', user.email, dynamic_template_data
+        ).send()
+        temporary_user = {
+            'email': user.email,
+            'name': user.name,
+            'password': password
+        }
+        return temporary_user
 
     def create_superuser(self, email, name, password):
         """Creates and saves a new superuser."""
@@ -237,7 +256,7 @@ class TicketManager(BaseUserManager):
         """Creates and saves a new ticket."""
         if not ticket_type:
             raise ValueError('Enter a ticket type.')
-        if ticket_type.tickets_remaining < 0:
+        if ticket_type.tickets_remaining < 1:
             raise ValueError(
                 'Insufficient tickets remaining.'
             )
@@ -267,7 +286,7 @@ class TicketManager(BaseUserManager):
         ticket_type.save(using=self._db)
         ticket.save(using=self._db)
         issuer.save(using=self._db)
-        ticket.code = create_code(ticket.pk)
+        ticket.code = create_code(ticket.pk, 6)
         ticket.save(using=self._db)
         if owner is not None:
             promoter.save(using=self._db)
@@ -295,6 +314,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Groups
     is_artist = models.BooleanField(default=False)
     is_promoter = models.BooleanField(default=False)
+    is_temporary = models.BooleanField(default=False)
 
     # Billing
     address_city = models.CharField(max_length=255, blank=True)

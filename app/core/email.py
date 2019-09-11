@@ -35,6 +35,24 @@ class Email(object):
                         - https://www.instagram.com/_liveleague/\n
                         - https://www.twitter.com/_liveleague/\n
                         '''
+        if template_name == 'welcome_temporary_user':
+            self.from_email = 'welcome@liveleague.events'
+            self.template_id = 'd-57ccae755a00496781627629e1fd4800'
+            self.subject = 'Welcome to Live League!'
+            self.text = '''
+                        Congratulations!\n
+                        You've just signed up to the UK's biggest underground
+                        music competition. As a new user, you can look forward
+                        to:\n
+                        - Exclusive online offers\n
+                        - Chances to win great prizes\n
+                        - Voting for your favourite artists\n
+                        Be sure to follow us on social media for the latest
+                        news and competition results:\n
+                        - https://www.facebook.com/liveleague.events\n
+                        - https://www.instagram.com/_liveleague/\n
+                        - https://www.twitter.com/_liveleague/\n
+                        '''
         elif template_name == 'welcome_artist':
             self.from_email = 'welcome@liveleague.events'
             self.template_id = 'd-f73543b6aed34417ae4f4c5a6db5a98f'

@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 
 from rest_framework import generics, authentication, permissions
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, \
+                                      permission_classes
 from rest_framework.response import Response
 
 from core.email import Email
@@ -13,6 +14,8 @@ from superuser.permissions import IsSuperuserAndStaff
 from superuser.serializers import PasswordSerializer, CreditSerializer
 
 @api_view(['POST'])
+@authentication_classes((authentication.TokenAuthentication,))
+@permission_classes((permissions.IsAuthenticated, IsSuperuserAndStaff,))
 def create_secret(request):
     """
     Create a secret and send it to the user's email address.

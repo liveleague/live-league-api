@@ -104,13 +104,16 @@ class PublicTallySerializer(serializers.ModelSerializer):
     event_id = serializers.ReadOnlyField(source='event.pk')
     event_start_date = serializers.ReadOnlyField(source='event.start_date')
     event_start_time = serializers.ReadOnlyField(source='event.start_time')
+    event_end_date = serializers.ReadOnlyField(source='event.end_date')
+    event_end_time = serializers.ReadOnlyField(source='event.end_time')
     points = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Tally
         fields = (
-            'artist', 'event', 'event_id', 'event_start_date',
-            'event_start_time', 'points', 'slug'
+            'artist', 'event', 'event_id', 'event_end_date',
+            'event_end_time', 'event_start_date', 'event_start_time',
+            'points', 'slug'
         )
 
 
@@ -181,6 +184,12 @@ class TicketSerializer(serializers.ModelSerializer):
     """Serializer for the ticket object."""
     event = serializers.ReadOnlyField(source='ticket_type.event.name')
     event_id = serializers.ReadOnlyField(source='ticket_type.event.id')
+    event_end_date = serializers.ReadOnlyField(
+        source='ticket_type.event.end_date'
+    )
+    event_end_time = serializers.ReadOnlyField(
+        source='ticket_type.event.end_time'
+    )
     event_start_date = serializers.ReadOnlyField(
         source='ticket_type.event.start_date'
     )
@@ -199,9 +208,10 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = (
-            'event', 'event_id', 'event_start_date', 'event_start_time',
-            'code', 'owner', 'ticket_type', 'ticket_type_slug', 'vote',
-            'vote_artist', 'vote_slug'
+            'event', 'event_id', 'event_end_date', 'event_end_time',
+            'event_start_date', 'event_start_time', 'code', 'owner',
+            'ticket_type', 'ticket_type_slug', 'vote', 'vote_artist',
+            'vote_slug'
         )
         extra_kwargs = {
             'code': {'read_only': True},

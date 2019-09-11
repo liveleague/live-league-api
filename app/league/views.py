@@ -225,14 +225,14 @@ class RetrieveTableRowView(generics.RetrieveAPIView):
         return Artist.objects.all().annotate(
             event_count=Count(
                 Case(
-                    When(Q(tallies__event__start_date__lt=today) | (
-                        Q(tallies__event__start_date=today) & Q(
-                            tallies__event__start_time__lte=time
+                    When(Q(tallies__event__end_date__lt=today) | (
+                        Q(tallies__event__end_date=today) & Q(
+                            tallies__event__end_time__lte=time
                         )
                     ), then=1),
                     output_field=IntegerField(),
-                )
-            ),
+                    ), distinct=True
+                ),
             points=Sum(
                 Case(
                     When(Q(tallies__event__start_date__lt=today) | (
@@ -570,22 +570,21 @@ class ListTableRowView(generics.ListAPIView):
         return Artist.objects.all().annotate(
             event_count=Count(
                 Case(
-                    When(Q(tallies__event__start_date__lt=today) | (
-                        Q(tallies__event__start_date=today) & Q(
-                            tallies__event__start_time__lte=time
+                    When(Q(tallies__event__end_date__lt=today) | (
+                        Q(tallies__event__end_date=today) & Q(
+                            tallies__event__end_time__lte=time
                         )
                     ), then=1),
                     output_field=IntegerField(),
-                )
-            ),
+                    ), distinct=True
+                ),
             points=Sum(
                 Case(
-                    When(Q(tallies__event__start_date__lt=today) | (
-                        Q(tallies__event__start_date=today) & Q(
-                            tallies__event__start_time__lte=time
+                    When(Q(tallies__event__end_date__lt=today) | (
+                        Q(tallies__event__end_date=today) & Q(
+                            tallies__event__end_time__lte=time
                         )
                     ), then=F('tallies__tickets__ticket_type__price')),
-                    output_field=IntegerField(),
+                    output_field=IntegerField()),
                 )
             )
-        )

@@ -5,8 +5,14 @@ from user import views
 app_name = 'user'
 
 urlpatterns = [
+    path('exists/', views.user_exists, name='exists'),
     path('token/', views.CreateTokenView.as_view(), name='token'),
     path('create/', views.CreateUserView.as_view(), name='create'),
+    path(
+        'create/temporary',
+        views.create_temporary_user,
+        name='create-temporary'
+    ),
     path(
         'create/artist/',
         views.CreateArtistView.as_view(),

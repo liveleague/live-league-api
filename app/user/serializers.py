@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.response import Response
 
 from core.models import Artist, Promoter, Message, ReadFlag, Ticket
 
@@ -37,10 +38,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = (
             'credit', 'email', 'id', 'password', 'name', 'slug', 'is_artist',
-            'is_promoter', 'address_city', 'address_country', 'address_line1',
-            'address_line2', 'address_state', 'address_zip', 'facebook',
-            'instagram', 'phone', 'soundcloud', 'spotify', 'twitter',
-            'website', 'youtube', 'image'
+            'is_promoter', 'is_temporary', 'address_city', 'address_country',
+            'address_line1', 'address_line2', 'address_state', 'address_zip',
+            'facebook', 'instagram', 'phone', 'soundcloud', 'spotify',
+            'twitter', 'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'slug': {'read_only': True},
@@ -48,6 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
             'credit': {'read_only': True},
             'is_artist': {'read_only': True},
             'is_promoter': {'read_only': True},
+            'is_temporary': {'read_only': True},
         }
 
     def create(self, validated_data):
@@ -62,6 +64,21 @@ class UserSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
+
+
+class TemporaryUserSerializer(serializers.ModelSerializer):
+    """Serializer for the (temporary) user object."""
+
+    class Meta:
+        model = get_user_model()
+        fields = ('email',)
+    
+    def create(self, validated_data):
+        """Create a new temporary user and return it."""
+        temporary_user = get_user_model().objects.create_temporary_user(
+            **validated_data
+        )
+        return Response(temporary_user)
 
 
 class ArtistSerializer(serializers.ModelSerializer):
