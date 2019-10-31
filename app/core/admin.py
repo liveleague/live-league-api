@@ -19,7 +19,8 @@ class UserAdmin(BaseUserAdmin):
     ordering = ['id']
     list_display = ['id', 'email', 'name', 'slug', 'credit']
     list_filter = [
-        'is_active', 'is_staff', 'is_superuser', 'is_artist', 'is_promoter'
+        'is_active', 'is_staff', 'is_superuser', 'is_artist', 'is_promoter',
+        'is_temporary'
     ]
     fieldsets = (
         (None, {'fields': ('email', 'password',)}),
@@ -48,6 +49,7 @@ class UserAdmin(BaseUserAdmin):
                     'is_superuser',
                     'is_artist',
                     'is_promoter',
+                    'is_temporary',
                 )
             }
         ),

@@ -19,6 +19,11 @@ urlpatterns = [
         name='create-artist'
     ),
     path(
+        'invite/artist/',
+        views.InviteArtistView.as_view(),
+        name='invite-artist'
+    ),
+    path(
         'create/promoter/',
         views.CreatePromoterView.as_view(),
         name='create-promoter'

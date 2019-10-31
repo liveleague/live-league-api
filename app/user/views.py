@@ -9,18 +9,19 @@ from rest_framework import generics, authentication, permissions, viewsets, \
                            mixins, status
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from core.models import Artist, Promoter, Message, ReadFlag, Event, Tally
 from user.serializers import UserSerializer, TemporaryUserSerializer, \
                              TokenSerializer, ArtistSerializer, \
-                             PromoterSerializer, PublicArtistSerializer, \
+                             InviteArtistSerializer, PromoterSerializer, \
+                             PublicArtistSerializer, \
                              PublicPromoterSerializer, MessageSerializer, \
                              ReadFlagSerializer
 
 @api_view(['POST'])
-def user_exists(request):
+def user_exists(request, version):
     """Check if an email address belongs to a user."""
     try:
         get_user_model().objects.get(email=request.data['email'])
@@ -29,8 +30,8 @@ def user_exists(request):
         return Response({'exists': False})
 
 @api_view(['POST'])
-def create_temporary_user(request):
-    """Check if an email address belongs to a user."""
+def create_temporary_user(request, version):
+    """Create a temporary user."""
     try:
         temporary_user = get_user_model().objects.create_temporary_user(
             email=request.data['email']
@@ -59,6 +60,11 @@ class CreateTemporaryUserView(generics.CreateAPIView):
 class CreateArtistView(generics.CreateAPIView):
     """Create a new user."""
     serializer_class = ArtistSerializer
+
+
+class InviteArtistView(generics.CreateAPIView):
+    """Create a new user."""
+    serializer_class = InviteArtistSerializer
 
 
 class CreatePromoterView(generics.CreateAPIView):
@@ -117,9 +123,9 @@ class RetrieveArtistView(generics.RetrieveAPIView):
         return Artist.objects.all().annotate(
             event_count=Count(
                 Case(
-                    When(Q(tallies__event__end_date__lt=today) | (
-                        Q(tallies__event__end_date=today) & Q(
-                            tallies__event__end_time__lte=time
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
                         )
                     ), then=1),
                     output_field=IntegerField(),

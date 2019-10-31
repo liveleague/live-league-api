@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from django_filters import rest_framework as filters
 from django.contrib.auth import get_user_model
@@ -7,6 +8,8 @@ from django.db.models import Count, Sum, Q, F, Case, When, IntegerField
 from rest_framework import filters as rest_filters
 from rest_framework import generics, authentication, serializers
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from core.models import Artist, Promoter, Venue, Event, Tally, TicketType, \
                         Ticket
@@ -19,6 +22,16 @@ from league.serializers import CreateVenueSerializer, VenueSerializer, \
                                PublicTallySerializer, TicketTypeSerializer, \
                                TicketTypeEventSerializer, TicketSerializer, \
                                TableRowSerializer
+
+@api_view(['GET'])
+def prizes(request, version):
+    """Calculate the current prize pool."""
+    tickets = Ticket.objects.all()
+    total = 1000
+    for ticket in tickets:
+        total += (ticket.ticket_type.price * Decimal(0.08))
+    # Need to add a breakdown, e.g. 1st = x, 2nd = y, etc..
+    return Response({'total': total})
 
 
 class CreateVenueView(generics.CreateAPIView):
@@ -148,7 +161,8 @@ class VoteTicketView(generics.RetrieveUpdateAPIView):
     def perform_update(self, serializer):
         instance = serializer.save(owner=self.request.user)
         owner = instance.owner
-        Email('vote', owner.email).send()
+        if not owner.is_promoter:
+            Email('vote', owner.email).send()
 
 
 class RetrieveVenueView(generics.RetrieveAPIView):
@@ -186,6 +200,16 @@ class RetrieveTallyView(generics.RetrieveAPIView):
         today = datetime.today()
         time = datetime.now().time()
         return Tally.objects.all().annotate(
+            votes=Count(
+                Case(
+                    When(Q(event__start_date__lt=today) | (
+                        Q(event__start_date=today) & Q(
+                            event__start_time__lte=time
+                        )
+                    ), then=F('tickets')),
+                    output_field=IntegerField()),
+                    distinct=True
+                ),
             points=Sum(
                 Case(
                     When(Q(event__start_date__lt=today) | (
@@ -216,7 +240,6 @@ class RetrieveTicketTypeView(generics.RetrieveAPIView):
 class RetrieveTableRowView(generics.RetrieveAPIView):
     """Retrieve a table row."""
     serializer_class = TableRowSerializer
-    queryset = Artist.objects.all()
     lookup_field = 'slug'
 
     def get_queryset(self):
@@ -225,13 +248,13 @@ class RetrieveTableRowView(generics.RetrieveAPIView):
         return Artist.objects.all().annotate(
             event_count=Count(
                 Case(
-                    When(Q(tallies__event__end_date__lt=today) | (
-                        Q(tallies__event__end_date=today) & Q(
-                            tallies__event__end_time__lte=time
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
                         )
-                    ), then=1),
-                    output_field=IntegerField(),
-                    ), distinct=True
+                    ), then=F('tallies__event')),
+                    output_field=IntegerField()),
+                    distinct=True
                 ),
             points=Sum(
                 Case(
@@ -245,6 +268,21 @@ class RetrieveTableRowView(generics.RetrieveAPIView):
             )
         )
 
+'''
+class RetrieveAOTWView(generics.RetrieveAPIView):
+    """Retrieve the current artist of the week."""
+    serializer_class = AOTWSerializer
+
+    def get_queryset(self):
+        return Artist.objects.all().annotate(
+            event_count=Count(
+                Case(
+                    When( today - 7 days < event_start_date <= today )
+            
+            points=Count(
+                Case(
+                    When( today - 7 days < event_start_date <= today )
+'''
 
 class VenueFilter(filters.FilterSet):
     """Defines the filter fields for ListVenueView."""
@@ -492,7 +530,6 @@ class ListEventView(generics.ListAPIView):
 
 class ListTallyView(generics.ListAPIView):
     """List tallies."""
-    queryset = Tally.objects.all().order_by('slug')
     serializer_class = PublicTallySerializer
     filter_backends = (
         filters.DjangoFilterBackend,
@@ -505,6 +542,16 @@ class ListTallyView(generics.ListAPIView):
         today = datetime.today()
         time = datetime.now().time()
         return Tally.objects.all().annotate(
+            votes=Count(
+                Case(
+                    When(Q(event__start_date__lt=today) | (
+                        Q(event__start_date=today) & Q(
+                            event__start_time__lte=time
+                        )
+                    ), then=F('tickets')),
+                    output_field=IntegerField()),
+                    distinct=True
+                ),
             points=Sum(
                 Case(
                     When(Q(event__start_date__lt=today) | (
@@ -570,19 +617,19 @@ class ListTableRowView(generics.ListAPIView):
         return Artist.objects.all().annotate(
             event_count=Count(
                 Case(
-                    When(Q(tallies__event__end_date__lt=today) | (
-                        Q(tallies__event__end_date=today) & Q(
-                            tallies__event__end_time__lte=time
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
                         )
-                    ), then=1),
-                    output_field=IntegerField(),
-                    ), distinct=True
+                    ), then=F('tallies__event')),
+                    output_field=IntegerField()),
+                    distinct=True
                 ),
             points=Sum(
                 Case(
-                    When(Q(tallies__event__end_date__lt=today) | (
-                        Q(tallies__event__end_date=today) & Q(
-                            tallies__event__end_time__lte=time
+                    When(Q(tallies__event__start_date__lt=today) | (
+                        Q(tallies__event__start_date=today) & Q(
+                            tallies__event__start_time__lte=time
                         )
                     ), then=F('tallies__tickets__ticket_type__price')),
                     output_field=IntegerField()),

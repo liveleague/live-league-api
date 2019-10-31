@@ -14,7 +14,7 @@ class CreateVenueSerializer(serializers.ModelSerializer):
         fields = (
             'address_city', 'address_country', 'address_line1',
             'address_line2', 'address_state', 'address_zip',
-            'description', 'name'
+            'description', 'google_maps', 'name', 'image'
         )
         extra_kwargs = {
             'slug': {'read_only': True},
@@ -59,7 +59,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
         fields = (
             'description', 'end_date', 'end_time', 'id',
             'name', 'start_date', 'start_time',
-            'promoter', 'venue'
+            'promoter', 'venue', 'image'
         )
         read_only_fields = ('id',)
         extra_kwargs = {
@@ -97,9 +97,8 @@ class TallySerializer(serializers.ModelSerializer):
 
 class PublicTallySerializer(serializers.ModelSerializer):
     """Serializer for the tally object when publicly retrieved or listed."""
-    artist = serializers.SlugRelatedField(
-        queryset=Artist.objects.all(), slug_field='name'
-    )
+    artist = serializers.ReadOnlyField(source='artist.name')
+    artist_slug = serializers.ReadOnlyField(source='artist.slug')
     event = serializers.ReadOnlyField(source='event.name')
     event_id = serializers.ReadOnlyField(source='event.pk')
     event_start_date = serializers.ReadOnlyField(source='event.start_date')
@@ -107,13 +106,14 @@ class PublicTallySerializer(serializers.ModelSerializer):
     event_end_date = serializers.ReadOnlyField(source='event.end_date')
     event_end_time = serializers.ReadOnlyField(source='event.end_time')
     points = serializers.IntegerField(read_only=True)
+    votes = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Tally
         fields = (
-            'artist', 'event', 'event_id', 'event_end_date',
+            'artist', 'artist_slug', 'event', 'event_id', 'event_end_date',
             'event_end_time', 'event_start_date', 'event_start_time',
-            'points', 'slug'
+            'points', 'slug', 'votes'
         )
 
 

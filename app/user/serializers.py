@@ -113,6 +113,28 @@ class ArtistSerializer(serializers.ModelSerializer):
         return artist
 
 
+class InviteArtistSerializer(serializers.ModelSerializer):
+    """Serializer for the artist object when invited."""
+
+    class Meta:
+        model = Artist
+        fields = (
+            'credit', 'email', 'id', 'name', 'slug', 'is_artist',
+            'is_promoter', 'description', 'facebook', 'instagram', 'phone',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
+        )
+        extra_kwargs = {
+            'slug': {'read_only': True},
+            'credit': {'read_only': True},
+            'is_artist': {'read_only': True},
+            'is_promoter': {'read_only': True},
+        }
+
+    def create(self, validated_data):
+        """Create a new artist and return it."""
+        return Artist.objects.invite_artist(**validated_data)
+
+
 class PublicArtistSerializer(serializers.ModelSerializer):
     """Public serializer for the artist object."""
     event_count = serializers.IntegerField(read_only=True)
@@ -134,9 +156,10 @@ class PromoterSerializer(serializers.ModelSerializer):
         model = Promoter
         fields = (
             'credit', 'email', 'id', 'password', 'name', 'slug', 'is_artist',
-            'is_promoter', 'is_verified', 'description', 'facebook',
-            'instagram', 'phone', 'soundcloud', 'spotify', 'twitter',
-            'website', 'youtube', 'image'
+            'is_promoter', 'is_verified', 'address_city', 'address_country',
+            'address_line1', 'address_line2', 'address_state', 'address_zip',
+            'description', 'facebook', 'instagram', 'phone', 'soundcloud',
+            'spotify', 'twitter', 'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'slug': {'read_only': True},

@@ -20,7 +20,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('league/', include('league.urls')),
-    path('user/', include('user.urls')),
-    path('superuser/', include('superuser.urls')),
+    path('<version>/league/', include('league.urls')),
+    path('<version>/user/', include('user.urls')),
+    path('<version>/superuser/', include('superuser.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

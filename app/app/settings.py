@@ -20,12 +20,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '#m-vumup1m^idnctc_035k*jkrv*to21+lo04*t)g0$uz%l^g)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    '127.0.0.1', 'web', '46.101.31.33', 'api.liveleague.events',
-    'www.api.liveleague.events'
+    '127.0.0.1', 'web', '46.101.31.33', 'api.liveleague.co.uk',
+    'www.api.liveleague.co.uk'
 ]
+
+ADMINS = [('Live League Errors', 'errors@liveleague.co.uk')]
 
 CORS_ORIGIN_ALLOW_ALL=True
 
@@ -60,6 +62,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning'
+}
 
 ROOT_URLCONF = 'app.urls'
 

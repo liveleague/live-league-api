@@ -5,6 +5,7 @@ from league import views
 app_name = 'league'
 
 urlpatterns = [
+    path('prizes/', views.prizes, name='prizes'),
     path(
         'create/venue/',
         views.CreateVenueView.as_view(),

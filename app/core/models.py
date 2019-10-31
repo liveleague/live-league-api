@@ -58,15 +58,19 @@ class UserManager(BaseUserManager):
 
     def create_temporary_user(self, email, **extra_fields):
         """Creates and saves a new temporary user."""
+        string = email.split('@')[0]
+        firstpart, secondpart = \
+            string[:len(string)//2], string[len(string)//2:]
+        name = firstpart.capitalize() + ' ' + secondpart.capitalize()
         user = self.model(
             email=self.normalize_email(email),
-            name='Temporary User',
+            name=name,
             is_temporary=True,
             **extra_fields
         )
         password = create_code(randint(0, 1000000000000), 8)
         user.set_password(password)
-        user.slug = 'temporary-user'
+        user.slug = slugify(name)
         user.save(using=self._db)
         dynamic_template_data = {'password': password}
         Email(
@@ -101,6 +105,28 @@ class ArtistManager(BaseUserManager):
         artist.slug = slugify(name)
         artist.save(using=self._db)
         Email('welcome_artist', artist.email).send()
+        return artist
+
+    def invite_artist(self, email, name, **extra_fields):
+        """Invites an artist to join the league."""
+        if not email:
+            raise ValueError('Enter an email address.')
+        if not name:
+            raise ValueError('Enter a name.')
+        artist = Artist.objects.create(
+            email=self.normalize_email(email),
+            name=name,
+            is_temporary=True,
+            **extra_fields
+        )
+        password = create_code(randint(0, 1000000000000), 8)
+        artist.set_password(password)
+        artist.slug = slugify(name)
+        artist.save(using=self._db)
+        dynamic_template_data = {'password': password}
+        Email(
+            'invite_artist', artist.email, dynamic_template_data
+        ).send()
         return artist
 
 
@@ -290,8 +316,9 @@ class TicketManager(BaseUserManager):
         ticket.save(using=self._db)
         if owner is not None:
             promoter.save(using=self._db)
-            dynamic_template_data = {'code': ticket.code}
-            Email('ticket', owner.email, dynamic_template_data).send()
+            if not owner.is_promoter:
+                dynamic_template_data = {'code': ticket.code}
+                Email('ticket', owner.email, dynamic_template_data).send()
         return ticket
 
 
