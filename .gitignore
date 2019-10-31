@@ -109,3 +109,6 @@ sendgrid.env
 
 # Database
 /pgdata
+
+#Certificates
+/data
