@@ -598,11 +598,11 @@ class ListTicketView(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_promoter:
-            return Ticket.objects.all().prefetch_related("ticket_type__event", "vote__artist").filter(
+            return Ticket.objects.all().prefetch_related('ticket_type__event', 'vote__artist').filter(
                 ticket_type__event__promoter=self.request.user.promoter
             )
         else:
-            return Ticket.objects.prefetch_related("ticket_type__event", "vote__artist").filter(owner=self.request.user)
+            return Ticket.objects.prefetch_related('ticket_type__event', 'vote__artist').filter(owner=self.request.user)
 
 
 class ListTableRowView(generics.ListAPIView):
