@@ -24,7 +24,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '127.0.0.1', 'web', '46.101.31.33', 'api.liveleague.co.uk',
-    'www.api.liveleague.co.uk'
+    'www.api.liveleague.co.uk', '157.245.44.130'
 ]
 
 ADMINS = [('Live League Errors', 'errors@liveleague.co.uk')]
@@ -141,13 +141,14 @@ USE_L10N = True
 
 USE_TZ = True
 
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
+if not os.environ.get("DEV_ENV"):
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 
-SECURITY_MIDDLEWARE = ['django.middleware.security.SecurityMiddleware']
-MIDDLEWARE = SECURITY_MIDDLEWARE + MIDDLEWARE
+    SECURITY_MIDDLEWARE = ['django.middleware.security.SecurityMiddleware']
+    MIDDLEWARE = SECURITY_MIDDLEWARE + MIDDLEWARE
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
