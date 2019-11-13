@@ -38,10 +38,9 @@ class VenueSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Update a venue and return it."""
-        name = validated_data.pop('name', None)
         venue = super().update(instance, validated_data)
-        if name:
-            venue.slug = slugify(name)
+        if 'name' in validated_data:
+            venue.slug = slugify(validated_data['name'])
         venue.save()
         return venue
 
@@ -51,7 +50,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='pk')
     promoter = serializers.ReadOnlyField(source='promoter.name')
     venue = serializers.SlugRelatedField(
-        queryset=Venue.objects.all(), slug_field='name'
+        queryset=Venue.objects.all(), slug_field='slug'
     )
 
     class Meta:
@@ -74,7 +73,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
 class TallySerializer(serializers.ModelSerializer):
     """Serializer for the tally object."""
     artist = serializers.SlugRelatedField(
-        queryset=Artist.objects.all(), slug_field='name'
+        queryset=Artist.objects.all(), slug_field='slug'
     )
     votes = serializers.SerializerMethodField()
 
@@ -130,10 +129,19 @@ class LineupSerializer(serializers.ModelSerializer):
 
 class TicketTypeSerializer(serializers.ModelSerializer):
     """Serializer for the ticket type object."""
+    event_name = serializers.ReadOnlyField(source='event.name')
+    event_start_date = serializers.ReadOnlyField(source='event.start_date')
+    event_start_time = serializers.ReadOnlyField(source='event.start_time')
+    event_end_date = serializers.ReadOnlyField(source='event.end_date')
+    event_end_time = serializers.ReadOnlyField(source='event.end_time')
 
     class Meta:
         model = TicketType
-        fields = ('event', 'name', 'price', 'tickets_remaining', 'slug')
+        fields = (
+            'event', 'event_name', 'event_start_date', 'event_start_time',
+            'event_end_date', 'event_end_time', 'name', 'price',
+            'tickets_remaining', 'slug'
+        )
         extra_kwargs = {
             'slug': {'read_only': True},
         }
@@ -146,6 +154,15 @@ class TicketTypeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Create a new ticket type and return it."""
         return TicketType.objects.create_ticket_type(**validated_data)
+
+    def update(self, instance, validated_data):
+        """Update a ticket type and return it."""
+        ticket_type = super().update(instance, validated_data)
+        event_id = str(instance).split('-', 1)[0]
+        if 'name' in validated_data:
+            ticket_type.slug = event_id + '-' + slugify(validated_data['name'])
+        ticket_type.save()
+        return ticket_type
 
 
 class TicketTypeEventSerializer(serializers.ModelSerializer):
@@ -208,13 +225,14 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = (
-            'event', 'event_id', 'event_end_date', 'event_end_time',
-            'event_start_date', 'event_start_time', 'code', 'owner',
-            'ticket_type', 'ticket_type_slug', 'vote', 'vote_artist',
-            'vote_slug'
+            'created_date', 'created_time', 'code', 'event', 'event_id',
+            'event_end_date', 'event_end_time', 'event_start_date',
+            'event_start_time', 'id', 'owner', 'ticket_type',
+            'ticket_type_slug', 'vote', 'vote_artist', 'vote_slug'
         )
         extra_kwargs = {
             'code': {'read_only': True},
+            'id': {'read_only': True},
             'owner': {'read_only': True},
             'ticket_type': {'read_only': True},
             'vote': {'read_only': True},
@@ -230,13 +248,13 @@ class EventSerializer(serializers.ModelSerializer):
     ticket_types = TicketTypeEventSerializer(many=True, read_only=True)
     tickets_sold = serializers.SerializerMethodField()
     venue = serializers.SlugRelatedField(
-        queryset=Venue.objects.all(), slug_field='name'
+        queryset=Venue.objects.all(), slug_field='slug'
     )
     venue_city = serializers.ReadOnlyField(source='venue.address_city')
     venue_google_maps = serializers.ReadOnlyField(
         source='venue.google_maps'
     )
-    venue_slug = serializers.ReadOnlyField(source='venue.slug')
+    venue_name = serializers.ReadOnlyField(source='venue.name')
 
     class Meta:
         model = Event
@@ -244,14 +262,15 @@ class EventSerializer(serializers.ModelSerializer):
             'description', 'end_date', 'end_time', 'id', 'image', 'lineup',
             'name', 'promoter', 'promoter_slug', 'start_date', 'start_time',
             'ticket_types', 'tickets_sold', 'venue', 'venue_city',
-            'venue_google_maps', 'venue_slug'
+            'venue_google_maps', 'venue_name'
         )
         read_only_fields = ('id',)
 
     def update(self, instance, validated_data):
         """Update an event and return it."""
-        name = validated_data.pop('name', None)
         event = super().update(instance, validated_data)
+        if 'name' in validated_data:
+            event.slug = slugify(validated_data['name'])
         event.save()
         return event
 

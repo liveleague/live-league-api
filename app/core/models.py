@@ -532,6 +532,8 @@ class TicketType(models.Model):
 class Ticket(models.Model):
     """Ticket model. (better description needed)."""
     code = models.CharField(max_length=6)
+    created_date = models.DateField(auto_now_add=True)
+    created_time = models.TimeField(auto_now_add=True)
     owner = models.ForeignKey(
         'User',
         on_delete=models.CASCADE,
@@ -544,7 +546,7 @@ class Ticket(models.Model):
     )
     vote = models.ForeignKey(
         'Tally',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='tickets',
         null=True,
         blank=True

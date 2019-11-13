@@ -4,6 +4,7 @@ from decimal import Decimal
 from django_filters import rest_framework as filters
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Sum, Q, F, Case, When, IntegerField
+from django.template.defaultfilters import slugify
 
 from rest_framework import filters as rest_filters
 from rest_framework import generics, authentication, serializers
@@ -596,7 +597,12 @@ class ListTicketView(generics.ListAPIView):
     filterset_class = TicketFilter
 
     def get_queryset(self):
-        return Ticket.objects.filter(owner=self.request.user)
+        if self.request.user.is_promoter:
+            return Ticket.objects.all().prefetch_related("ticket_type__event", "vote__artist").filter(
+                ticket_type__event__promoter=self.request.user.promoter
+            )
+        else:
+            return Ticket.objects.prefetch_related("ticket_type__event", "vote__artist").filter(owner=self.request.user)
 
 
 class ListTableRowView(generics.ListAPIView):

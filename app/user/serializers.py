@@ -62,7 +62,9 @@ class UserSerializer(serializers.ModelSerializer):
         user = super().update(instance, validated_data)
         if password:
             user.set_password(password)
-            user.save()
+        if 'name' in validated_data:
+            user.slug = slugify(validated_data['name'])
+        user.save()
         return user
 
 

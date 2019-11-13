@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '#m-vumup1m^idnctc_035k*jkrv*to21+lo04*t)g0$uz%l^g)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     '127.0.0.1', 'web', '46.101.31.33', 'api.liveleague.co.uk',
