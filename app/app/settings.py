@@ -20,7 +20,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '#m-vumup1m^idnctc_035k*jkrv*to21+lo04*t)g0$uz%l^g)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if os.environ.get('DEV_ENV'):
+    DEBUG = True
+else:
+    DEBUG = False
 
 ALLOWED_HOSTS = [
     '127.0.0.1', 'web', '46.101.31.33', 'api.liveleague.co.uk',
@@ -90,7 +93,7 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-if os.environ.get("DEV_ENV"):
+if os.environ.get('DEV_ENV'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -141,7 +144,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-if not os.environ.get("DEV_ENV"):
+if not os.environ.get('DEV_ENV'):
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
