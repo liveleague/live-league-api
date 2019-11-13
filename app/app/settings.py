@@ -24,7 +24,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '127.0.0.1', 'web', '46.101.31.33', 'api.liveleague.co.uk',
-    'www.api.liveleague.co.uk'
+    'www.api.liveleague.co.uk', '157.245.44.130'
 ]
 
 ADMINS = [('Live League Errors', 'errors@liveleague.co.uk')]
@@ -90,16 +90,23 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.environ.get('DB_HOST'),
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS'),
+if os.environ.get("DEV_ENV"):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'HOST': os.environ.get('DB_HOST'),
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASS'),
+        }
+    }
 
 """
 # Password validation
@@ -134,13 +141,14 @@ USE_L10N = True
 
 USE_TZ = True
 
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
+if not os.environ.get("DEV_ENV"):
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 
-SECURITY_MIDDLEWARE = ['django.middleware.security.SecurityMiddleware']
-MIDDLEWARE = SECURITY_MIDDLEWARE + MIDDLEWARE
+    SECURITY_MIDDLEWARE = ['django.middleware.security.SecurityMiddleware']
+    MIDDLEWARE = SECURITY_MIDDLEWARE + MIDDLEWARE
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
