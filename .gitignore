@@ -112,3 +112,6 @@ sendgrid.env
 
 #Certificates
 /data
+
+#db
+/app/db.sqlite3

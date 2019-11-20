@@ -73,10 +73,7 @@ class CreateTicketView(generics.CreateAPIView):
     serializer_class = CreateTicketSerializer
 
     def perform_create(self, serializer):
-        if self.request.user.is_promoter:
-            serializer.save(owner=None)
-        else:
-            serializer.save(owner=self.request.user)
+        serializer.save(owner=self.request.user)
 
 
 class EditVenueView(generics.RetrieveUpdateDestroyAPIView):
