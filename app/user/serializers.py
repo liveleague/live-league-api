@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import ugettext_lazy as _
+from django.template.defaultfilters import slugify
 
 from rest_framework import serializers
 from rest_framework.response import Response
