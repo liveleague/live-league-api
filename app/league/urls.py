@@ -5,6 +5,7 @@ from league import views
 app_name = 'league'
 
 urlpatterns = [
+    path('webhook/', views.StripeWebHook.as_view()),
     path('prizes/', views.prizes, name='prizes'),
     path(
         'create/venue/',

@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+import ast
 
 from django_filters import rest_framework as filters
 from django.contrib.auth import get_user_model
@@ -11,9 +12,10 @@ from rest_framework import generics, authentication, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from core.models import Artist, Promoter, Venue, Event, Tally, TicketType, \
-                        Ticket
+from core.models import User, Artist, Promoter, Venue, Event, Tally, \
+                        TicketType, Ticket
 from core.email import Email
 from league.permissions import IsVerifiedPromoter, IsPromoterOrReadOnly, \
                                IsOwner
@@ -23,6 +25,39 @@ from league.serializers import CreateVenueSerializer, VenueSerializer, \
                                PublicTallySerializer, TicketTypeSerializer, \
                                TicketTypeEventSerializer, TicketSerializer, \
                                TableRowSerializer
+
+class StripeWebHook(APIView):
+    authentication_classes = ()
+    permission_classes = ()
+
+    def post(self, request, *args, **kwargs):
+        cart = ast.literal_eval(
+            request.data['data']['object']['description']
+        )
+        charge = request.data[
+            'data']['object']['charges']['data'][0]['amount'
+        ] / 100
+        total = 0
+        for item in cart:
+            cost = TicketType.objects.get(
+                slug=item['slug']
+            ).price * item['quantity']
+            total += cost
+        if charge == total:
+            user = User.objects.get(
+                stripe_id=request.data['data']['object']['customer']
+            )
+            user.credit += Decimal(charge)
+            user.save()
+            for item in cart:
+                ticket_type = TicketType.objects.get(slug=item['slug'])
+                quantity = 0
+                while quantity < item['quantity']:
+                    Ticket.objects.create_ticket(
+                        owner=user, ticket_type=ticket_type
+                    )
+                    quantity += 1
+        return Response({})
 
 @api_view(['GET'])
 def prizes(request, version):
