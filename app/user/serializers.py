@@ -37,7 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            'credit', 'email', 'id', 'password', 'name', 'slug', 'is_artist',
+            'credit', 'email', 'id', 'password', 'name', 'slug', 'stripe_id', 'is_artist',
             'is_promoter', 'is_temporary', 'address_city', 'address_country',
             'address_line1', 'address_line2', 'address_state', 'address_zip',
             'facebook', 'instagram', 'phone', 'soundcloud', 'spotify',
