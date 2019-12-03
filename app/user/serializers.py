@@ -38,11 +38,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = (
-            'credit', 'email', 'id', 'password', 'name', 'slug', 'stripe_id', 'is_artist',
-            'is_promoter', 'is_temporary', 'address_city', 'address_country',
-            'address_line1', 'address_line2', 'address_state', 'address_zip',
-            'facebook', 'instagram', 'phone', 'soundcloud', 'spotify',
-            'twitter', 'website', 'youtube', 'image'
+            'credit', 'email', 'id', 'password', 'name', 'slug', 'stripe_id',
+            'is_artist', 'is_promoter', 'is_temporary', 'address_city',
+            'address_country', 'address_line1', 'address_line2',
+            'address_state', 'address_zip', 'facebook', 'instagram', 'phone',
+            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'slug': {'read_only': True},
@@ -90,9 +90,10 @@ class ArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = (
-            'credit', 'email', 'id', 'password', 'name', 'slug', 'is_artist',
-            'is_promoter', 'description', 'facebook', 'instagram', 'phone',
-            'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
+            'credit', 'email', 'id', 'password', 'name', 'slug', 'stripe_id',
+            'is_artist', 'is_promoter', 'description', 'facebook', 'instagram',
+            'phone', 'soundcloud', 'spotify', 'twitter', 'website', 'youtube',
+            'image'
         )
         extra_kwargs = {
             'slug': {'read_only': True},
@@ -122,7 +123,7 @@ class InviteArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = (
-            'credit', 'email', 'id', 'name', 'slug', 'is_artist',
+            'credit', 'email', 'id', 'name', 'slug', 'stripe_id', 'is_artist',
             'is_promoter', 'description', 'facebook', 'instagram', 'phone',
             'soundcloud', 'spotify', 'twitter', 'website', 'youtube', 'image'
         )
@@ -158,11 +159,12 @@ class PromoterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promoter
         fields = (
-            'credit', 'email', 'id', 'password', 'name', 'slug', 'is_artist',
-            'is_promoter', 'is_verified', 'address_city', 'address_country',
-            'address_line1', 'address_line2', 'address_state', 'address_zip',
-            'description', 'facebook', 'instagram', 'phone', 'soundcloud',
-            'spotify', 'twitter', 'website', 'youtube', 'image'
+            'credit', 'email', 'id', 'password', 'name', 'slug', 'stripe_id',
+            'is_artist', 'is_promoter', 'is_verified', 'address_city',
+            'address_country', 'address_line1', 'address_line2',
+            'address_state', 'address_zip', 'description', 'facebook',
+            'instagram', 'phone', 'soundcloud', 'spotify', 'twitter',
+            'website', 'youtube', 'image'
         )
         extra_kwargs = {
             'slug': {'read_only': True},

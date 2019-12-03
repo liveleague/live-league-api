@@ -467,8 +467,15 @@ class TicketTypeFilter(filters.FilterSet):
 
 class TicketFilter(filters.FilterSet):
     """Defines the filter fields for ListTicketView."""
-    ticket_type = filters.ModelChoiceFilter(queryset=TicketType.objects.all())
-    vote = filters.ModelChoiceFilter(queryset=Tally.objects.all())
+    owner = filters.ModelChoiceFilter(
+        queryset=User.objects.all(), to_field_name='slug'
+    )
+    ticket_type = filters.ModelChoiceFilter(
+        queryset=TicketType.objects.all(), to_field_name='slug'
+    )
+    vote = filters.ModelChoiceFilter(
+        queryset=Tally.objects.all(), to_field_name='slug'
+    )
 
     class Meta:
         model = Ticket
