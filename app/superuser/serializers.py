@@ -27,3 +27,11 @@ class CreditSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('credit',)
+
+
+class StripeSerializer(serializers.ModelSerializer):
+    """Serializer for a user's Stripe ID."""
+
+    class Meta:
+        model = get_user_model()
+        fields = ('stripe_id',)

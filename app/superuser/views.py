@@ -11,7 +11,8 @@ from rest_framework.response import Response
 
 from core.email import Email
 from superuser.permissions import IsSuperuserAndStaff
-from superuser.serializers import PasswordSerializer, CreditSerializer
+from superuser.serializers import PasswordSerializer, CreditSerializer, \
+                                  StripeSerializer
 
 @api_view(['POST'])
 @authentication_classes((authentication.TokenAuthentication,))
@@ -51,6 +52,16 @@ class ManageCreditView(generics.RetrieveUpdateAPIView):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated, IsSuperuserAndStaff,)
     serializer_class = CreditSerializer
+
+    def get_queryset(self):
+        return get_user_model().objects.filter(pk=self.kwargs['pk'])
+
+
+class ManageStripeView(generics.RetrieveUpdateAPIView):
+    """Retrieve a user's Stripe ID."""
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated, IsSuperuserAndStaff,)
+    serializer_class = StripeSerializer
 
     def get_queryset(self):
         return get_user_model().objects.filter(pk=self.kwargs['pk'])

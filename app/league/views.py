@@ -34,15 +34,18 @@ class StripeWebHook(APIView):
         cart = ast.literal_eval(
             request.data['data']['object']['description']
         )
-        charge = request.data[
+        charge = round(Decimal(request.data[
             'data']['object']['charges']['data'][0]['amount'
-        ] / 100
+        ] / 100), 2)
         total = 0
         for item in cart:
             cost = TicketType.objects.get(
                 slug=item['slug']
             ).price * item['quantity']
-            total += cost
+            if item['type'] == 'otd':
+                total += round((cost * Decimal(0.15)), 2)
+            else:
+                total += cost
         if charge == total:
             user = User.objects.get(
                 stripe_id=request.data['data']['object']['customer']
@@ -51,10 +54,14 @@ class StripeWebHook(APIView):
             user.save()
             for item in cart:
                 ticket_type = TicketType.objects.get(slug=item['slug'])
+                if item['vote']:
+                    vote = Tally.objects.get(slug=item['vote'])
+                else:
+                    vote = None
                 quantity = 0
                 while quantity < item['quantity']:
                     Ticket.objects.create_ticket(
-                        owner=user, ticket_type=ticket_type
+                        owner=user, ticket_type=ticket_type, vote=vote
                     )
                     quantity += 1
         return Response({})
