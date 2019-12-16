@@ -48,11 +48,16 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'phonenumber_field',
     'corsheaders',
+    'drf_yasg',
     'core',
     'league',
     'superuser',
     'user'
 ]
+
+REDOC_SETTINGS = {
+
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

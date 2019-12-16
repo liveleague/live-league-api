@@ -26,7 +26,7 @@ from league.serializers import CreateVenueSerializer, VenueSerializer, \
                                TicketTypeEventSerializer, TicketSerializer, \
                                TableRowSerializer
 
-class StripeWebHook(APIView):
+class PaymentIntentWebhook(APIView):
     authentication_classes = ()
     permission_classes = ()
 
@@ -34,15 +34,22 @@ class StripeWebHook(APIView):
         cart = ast.literal_eval(
             request.data['data']['object']['description']
         )
-        charge = request.data[
-            'data']['object']['charges']['data'][0]['amount'
-        ] / 100
+        charges = request.data['data']['object']['charges']['data']
+        print(type(charges))
+        print(charges)
+        # FIX CHARGES LIST
+        # GET RID OF DECIMAL ROUNDING SHIT --> FLOAT
+        '''
+        charge = round(Decimal(request.data['data']['object']['charges']['data'][0]['amount'] / 100), 2)
         total = 0
         for item in cart:
             cost = TicketType.objects.get(
                 slug=item['slug']
             ).price * item['quantity']
-            total += cost
+            if item['type'] == 'otd':
+                total += round((cost * Decimal(0.15)), 2)
+            else:
+                total += cost
         if charge == total:
             user = User.objects.get(
                 stripe_id=request.data['data']['object']['customer']
@@ -51,12 +58,25 @@ class StripeWebHook(APIView):
             user.save()
             for item in cart:
                 ticket_type = TicketType.objects.get(slug=item['slug'])
+                if item['vote']:
+                    vote = Tally.objects.get(slug=item['vote'])
+                else:
+                    vote = None
                 quantity = 0
                 while quantity < item['quantity']:
                     Ticket.objects.create_ticket(
-                        owner=user, ticket_type=ticket_type
+                        owner=user, ticket_type=ticket_type, vote=vote
                     )
                     quantity += 1
+        '''
+        return Response({})
+
+
+class ChargeWebhook(APIView):
+    authentication_classes = ()
+    permission_classes = ()
+
+    def post(self, request, *args, **kwargs):
         return Response({})
 
 @api_view(['GET'])
@@ -165,31 +185,32 @@ class VoteTicketView(generics.RetrieveUpdateAPIView):
     lookup_field = 'code'
 
     def get_serializer_class(self):
-        ticket = Ticket.objects.get(code=self.kwargs['code'])
-        event = ticket.ticket_type.event
+        ticket = Ticket.objects.filter(code=self.kwargs.get('code', '')).first()
+        if ticket:
+            event = ticket.ticket_type.event
 
-        class VoteTicketSerializer(serializers.ModelSerializer):
-            """Serializer for the ticket object when voting."""
-            owner = serializers.StringRelatedField()
-            ticket_type = serializers.StringRelatedField()
-            vote = serializers.SlugRelatedField(
-                queryset=Tally.objects.filter(event=event),
-                slug_field='slug'
-            )
+            class VoteTicketSerializer(serializers.ModelSerializer):
+                """Serializer for the ticket object when voting."""
+                owner = serializers.StringRelatedField()
+                ticket_type = serializers.StringRelatedField()
+                vote = serializers.SlugRelatedField(
+                    queryset=Tally.objects.filter(event=event),
+                    slug_field='slug'
+                )
 
-            class Meta:
-                model = Ticket
-                fields = ('code', 'owner', 'ticket_type', 'vote')
-                extra_kwargs = {
-                    'code': {'read_only': True},
-                    'owner': {'read_only': True},
-                    'ticket_type': {'read_only': True},
-                }
+                class Meta:
+                    model = Ticket
+                    fields = ('code', 'owner', 'ticket_type', 'vote')
+                    extra_kwargs = {
+                        'code': {'read_only': True},
+                        'owner': {'read_only': True},
+                        'ticket_type': {'read_only': True},
+                    }
 
-        if ticket.vote is None:
-            return VoteTicketSerializer
-        else:
-            return TicketSerializer
+            if ticket.vote is None:
+                return VoteTicketSerializer
+        
+        return TicketSerializer
 
     def perform_update(self, serializer):
         instance = serializer.save(owner=self.request.user)

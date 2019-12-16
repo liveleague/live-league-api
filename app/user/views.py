@@ -53,7 +53,7 @@ class CreateUserView(generics.CreateAPIView):
 
 
 class CreateTemporaryUserView(generics.CreateAPIView):
-    """Create a new user."""
+    """Create a new temporary user."""
     serializer_class = TemporaryUserSerializer
 
 

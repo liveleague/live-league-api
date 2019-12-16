@@ -5,16 +5,6 @@ from league import views
 app_name = 'league'
 
 urlpatterns = [
-    path(
-        'webhook/payment-intent/',
-        views.PaymentIntentWebhook.as_view(),
-        name='webhook-payment-intent'
-    ),
-    path(
-        'webhook/charge/',
-        views.ChargeWebhook.as_view(),
-        name='webhook-charge'
-    ),
     path('prizes/', views.prizes, name='prizes'),
     path(
         'create/venue/',
@@ -31,11 +21,6 @@ urlpatterns = [
         'create/ticket-type/',
         views.CreateTicketTypeView.as_view(),
         name='create-ticket-type'
-    ),
-    path(
-        'create/ticket/',
-        views.CreateTicketView.as_view(),
-        name='create-ticket'
     ),
     path(
         'edit/venue/<slug>/', views.EditVenueView.as_view(), name='edit-venue'

@@ -107,7 +107,10 @@ class TicketTypeAdmin(admin.ModelAdmin):
 
 
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'code', 'owner', 'ticket_type', 'vote']
+    list_display = [
+        'pk', 'code', 'created_date', 'created_time', 'owner', 'ticket_type',
+        'vote'
+    ]
 
 
 admin.site.register(models.User, UserAdmin)
