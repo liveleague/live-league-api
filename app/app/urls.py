@@ -17,13 +17,27 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
-from rest_framework.schemas import get_schema_view
-from rest_framework.renderers import JSONOpenAPIRenderer
+
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 
 schema_view = get_schema_view(
-    title='Testing API',
-    url='https://www.example.org/api/',
-    renderer_classes=[JSONOpenAPIRenderer]
+    openapi.Info(
+        title='Live League API',
+        default_version='v1',
+        description='Test description',
+        terms_of_service='',
+        contact=openapi.Contact(email='support@liveleague.co.uk'),
+        x_logo={
+            'url': 'https://liveleague.co.uk/static/img/liveleague.png',
+            'backgroundColor': '#FFFFFF',
+            'altText': 'Live League logo'
+        },
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+    urlconf='app.doc_urls'
 )
 
 urlpatterns = [
@@ -31,6 +45,10 @@ urlpatterns = [
     path('<version>/league/', include('league.urls')),
     path('<version>/user/', include('user.urls')),
     path('<version>/superuser/', include('superuser.urls')),
-    path('schema.json', schema_view),    
-
+    path('swagger/', schema_view.with_ui(
+        'swagger', cache_timeout=0), name='schema-swagger-ui'
+    ),
+    path('redoc/', schema_view.with_ui(
+        'redoc', cache_timeout=0
+    ), name='schema-redoc'),  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

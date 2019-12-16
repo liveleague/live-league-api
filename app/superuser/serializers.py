@@ -3,6 +3,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
+from core.models import Promoter
+
 
 class PasswordSerializer(serializers.ModelSerializer):
     """Serializer for a user's password."""
@@ -29,9 +31,17 @@ class CreditSerializer(serializers.ModelSerializer):
         fields = ('credit',)
 
 
+class IsVerifiedSerializer(serializers.ModelSerializer):
+    """Serializer for a user's credit."""
+
+    class Meta:
+        model = Promoter
+        fields = ('is_verified',)
+
+
 class StripeSerializer(serializers.ModelSerializer):
     """Serializer for a user's Stripe ID."""
 
     class Meta:
         model = get_user_model()
-        fields = ('stripe_id',)
+        fields = ('stripe_account_id', 'stripe_customer_id',)

@@ -82,9 +82,14 @@ class TallySerializer(serializers.ModelSerializer):
         fields = ('artist', 'event', 'votes')
 
     def __init__(self, *args, **kwargs):
-        promoter = kwargs['context']['request'].user.promoter
         super(TallySerializer, self).__init__(*args, **kwargs)
-        self.fields['event'].queryset = Event.objects.filter(promoter=promoter)
+        user = kwargs['context']['request'].user
+        if user.is_promoter:
+            self.fields['event'].queryset = Event.objects.filter(
+                promoter=user.promoter
+            )
+        else:
+            self.fields['event'].queryset = Event.objects.all()
 
     def get_votes(self, obj):
         return obj.tickets.count()
@@ -148,8 +153,13 @@ class TicketTypeSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super(TicketTypeSerializer, self).__init__(*args, **kwargs)
-        promoter = kwargs['context']['request'].user.promoter
-        self.fields['event'].queryset = Event.objects.filter(promoter=promoter)
+        user = kwargs['context']['request'].user
+        if user.is_promoter:
+            self.fields['event'].queryset = Event.objects.filter(
+                promoter=user.promoter
+            )
+        else:
+            self.fields['event'].queryset = Event.objects.all()
 
     def create(self, validated_data):
         """Create a new ticket type and return it."""

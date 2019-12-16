@@ -350,7 +350,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     address_line2 = models.CharField(max_length=255, blank=True)
     address_state = models.CharField(max_length=255, blank=True)
     address_zip = models.CharField(max_length=255, blank=True)
-    stripe_id = models.CharField(max_length=255, blank=True)
+    stripe_account_id = models.CharField(max_length=255, blank=True)
+    stripe_customer_id = models.CharField(max_length=255, blank=True)
 
     # Contact
     facebook = models.URLField(blank=True)
