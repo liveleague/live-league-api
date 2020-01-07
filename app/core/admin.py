@@ -24,7 +24,7 @@ class UserAdmin(BaseUserAdmin):
     ]
     fieldsets = (
         (None, {'fields': ('email', 'password',)}),
-        (_('Account Info'), {'fields': ('name', 'slug', 'credit', 'stripe_id')}),
+        (_('Account Info'), {'fields': ('name', 'slug', 'credit', 'stripe_account_id', 'stripe_customer_id')}),
         (
             _('Contact Info'),
             {
@@ -103,7 +103,9 @@ class TallyAdmin(admin.ModelAdmin):
 
 
 class TicketTypeAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'slug', 'event', 'name', 'price', 'tickets_remaining']
+    list_display = [
+        'pk', 'slug', 'event', 'name', 'price', 'tickets_remaining'
+    ]
 
 
 class TicketAdmin(admin.ModelAdmin):

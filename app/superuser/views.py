@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view, authentication_classes, \
 from rest_framework.response import Response
 
 from core.email import Email
+from core.models import Promoter
 from superuser.permissions import IsSuperuserAndStaff
 from superuser.serializers import PasswordSerializer, CreditSerializer, \
                                   IsVerifiedSerializer, StripeSerializer
@@ -64,7 +65,7 @@ class ManageVerificationView(generics.RetrieveUpdateAPIView):
     serializer_class = IsVerifiedSerializer
 
     def get_queryset(self):
-        return get_user_model().objects.filter(pk=self.kwargs['pk'])
+        return Promoter.objects.filter(pk=self.kwargs['pk'])
 
 
 class ManageStripeView(generics.RetrieveUpdateAPIView):
