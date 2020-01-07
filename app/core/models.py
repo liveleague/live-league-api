@@ -278,7 +278,7 @@ class TicketTypeManager(BaseUserManager):
 
 class TicketManager(BaseUserManager):
 
-    def create_ticket(self, owner, ticket_type, **extra_fields):
+    def create_ticket(self, ticket_type, owner=None, **extra_fields):
         """Creates and saves a new ticket."""
         if not ticket_type:
             raise ValueError('Enter a ticket type.')
@@ -299,16 +299,11 @@ class TicketManager(BaseUserManager):
         issuer.credit = issuer.credit - ticket_type.price
         if owner is not None:
             promoter.credit = promoter.credit + ticket_type.price
-            ticket = Ticket.objects.create(
-                ticket_type=ticket_type,
-                owner=owner,
-                **extra_fields
-            )
-        else:
-            ticket = Ticket.objects.create(
-                ticket_type=ticket_type,
-                **extra_fields
-            )
+        ticket = Ticket.objects.create(
+            ticket_type=ticket_type,
+            owner=issuer,
+            **extra_fields
+        )
         ticket_type.save(using=self._db)
         ticket.save(using=self._db)
         issuer.save(using=self._db)

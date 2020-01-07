@@ -1,6 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 import ast
+import os
 
 from django_filters import rest_framework as filters
 from django.contrib.auth import get_user_model
@@ -14,6 +15,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+import stripe
+
+from app.keys import STRIPE_TEST_KEYS, STRIPE_LIVE_KEYS
 from core.models import User, Artist, Promoter, Venue, Event, Tally, \
                         TicketType, Ticket
 from core.email import Email
@@ -26,7 +30,16 @@ from league.serializers import CreateVenueSerializer, VenueSerializer, \
                                TicketTypeEventSerializer, TicketSerializer, \
                                TableRowSerializer
 
+if os.environ.get('DEV_ENV'):
+    stripe.api_key = STRIPE_TEST_KEYS['secret_key']
+else:
+    stripe.api_key = STRIPE_LIVE_KEYS['secret_key']
+
+PLATFORM_STRIPE_ID = 'acct_1EDWO8IZkWAHcQr8'
+
+
 class PaymentIntentWebhook(APIView):
+    """Handle checkout payments from customer to platform and promoter."""
     authentication_classes = ()
     permission_classes = ()
 
@@ -35,27 +48,73 @@ class PaymentIntentWebhook(APIView):
             request.data['data']['object']['description']
         )
         charges = request.data['data']['object']['charges']['data']
-        print(type(charges))
-        print(charges)
-        # FIX CHARGES LIST
-        # GET RID OF DECIMAL ROUNDING SHIT --> FLOAT
-        '''
-        charge = round(Decimal(request.data['data']['object']['charges']['data'][0]['amount'] / 100), 2)
-        total = 0
+        transfer_group = request.data['data']['object']['transfer_group']
+        total_charge = 0
+        total_cart = 0
+        for charge in charges:
+            total_charge += charge['amount'] / 100
         for item in cart:
             cost = TicketType.objects.get(
                 slug=item['slug']
             ).price * item['quantity']
-            if item['type'] == 'otd':
-                total += round((cost * Decimal(0.15)), 2)
-            else:
-                total += cost
-        if charge == total:
+            total_cart += cost
+        if Decimal(total_charge) - total_cart < 0.01 and len(charges) == 1:
             user = User.objects.get(
-                stripe_id=request.data['data']['object']['customer']
+                stripe_customer_id=request.data['data']['object']['customer']
             )
-            user.credit += Decimal(charge)
+            charge_id = \
+                request.data['data']['object']['charges']['data'][0]['id']
+            user.credit += Decimal(total_charge)
             user.save()
+            for item in cart:
+                ticket_type = TicketType.objects.get(slug=item['slug'])
+                if item['vote']:
+                    vote = Tally.objects.get(slug=item['vote'])
+                else:
+                    vote = None
+                transfer_amount = TicketType.objects.get(
+                    slug=item['slug']
+                ).price * item['quantity'] * 15
+                event_id = item['slug'].split('-')[0]
+                event = Event.objects.get(id=event_id)
+                promoter = Promoter.objects.get(slug=event.promoter.slug)
+                transfer = stripe.Transfer.create(
+                    amount=int(transfer_amount),
+                    currency='gbp',
+                    destination=promoter.stripe_account_id,
+                    source_transaction=charge_id,
+                    transfer_group=transfer_group
+                )
+                quantity = 0
+                while quantity < item['quantity']:
+                    Ticket.objects.create_ticket(
+                        ticket_type=ticket_type, owner=user, vote=vote
+                    )
+                    quantity += 1
+        return Response({})
+
+
+class ChargeWebhook(APIView):
+    """Handle tickets created in dashboard, paid for by the promoter."""
+    authentication_classes = ()
+    permission_classes = ()
+
+    def post(self, request, *args, **kwargs):
+        cart = ast.literal_eval(
+            request.data['data']['object']['description']
+        )
+        total_charge = request.data['data']['object']['amount'] / 100
+        total_cart = 0
+        for item in cart:
+            cost = TicketType.objects.get(
+                slug=item['slug']
+            ).price * item['quantity']
+            total_cart += cost
+        if Decimal(total_charge) - total_cart < 0.01:
+            stripe_account = request.data['data']['object']['source']['id']
+            promoter = User.objects.get(stripe_account_id=stripe_account)
+            promoter.credit += Decimal(total_charge)
+            promoter.save()
             for item in cart:
                 ticket_type = TicketType.objects.get(slug=item['slug'])
                 if item['vote']:
@@ -65,19 +124,11 @@ class PaymentIntentWebhook(APIView):
                 quantity = 0
                 while quantity < item['quantity']:
                     Ticket.objects.create_ticket(
-                        owner=user, ticket_type=ticket_type, vote=vote
+                        ticket_type=ticket_type, vote=vote
                     )
                     quantity += 1
-        '''
         return Response({})
 
-
-class ChargeWebhook(APIView):
-    authentication_classes = ()
-    permission_classes = ()
-
-    def post(self, request, *args, **kwargs):
-        return Response({})
 
 @api_view(['GET'])
 def prizes(request, version):
