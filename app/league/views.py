@@ -100,33 +100,35 @@ class ChargeWebhook(APIView):
     permission_classes = ()
 
     def post(self, request, *args, **kwargs):
-        cart = ast.literal_eval(
-            request.data['data']['object']['description']
-        )
-        total_charge = request.data['data']['object']['amount'] / 100
-        total_cart = 0
-        for item in cart:
-            cost = TicketType.objects.get(
-                slug=item['slug']
-            ).price * item['quantity']
-            total_cart += cost
-        if Decimal(total_charge) - total_cart < 0.01:
-            stripe_account = request.data['data']['object']['source']['id']
-            promoter = User.objects.get(stripe_account_id=stripe_account)
-            promoter.credit += Decimal(total_charge)
-            promoter.save()
+        source = request.data['data']['object']['source']
+        if source:
+            cart = ast.literal_eval(
+                request.data['data']['object']['description']
+            )
+            total_charge = request.data['data']['object']['amount'] / 100
+            total_cart = 0
             for item in cart:
-                ticket_type = TicketType.objects.get(slug=item['slug'])
-                if item['vote']:
-                    vote = Tally.objects.get(slug=item['vote'])
-                else:
-                    vote = None
-                quantity = 0
-                while quantity < item['quantity']:
-                    Ticket.objects.create_ticket(
-                        ticket_type=ticket_type, vote=vote
-                    )
-                    quantity += 1
+                cost = TicketType.objects.get(
+                    slug=item['slug']
+                ).price * item['quantity']
+                total_cart += cost
+            if Decimal(total_charge) - total_cart < 0.01:
+                stripe_account = source['id']
+                promoter = User.objects.get(stripe_account_id=stripe_account)
+                promoter.credit += Decimal(total_charge)
+                promoter.save()
+                for item in cart:
+                    ticket_type = TicketType.objects.get(slug=item['slug'])
+                    if item['vote']:
+                        vote = Tally.objects.get(slug=item['vote'])
+                    else:
+                        vote = None
+                    quantity = 0
+                    while quantity < item['quantity']:
+                        Ticket.objects.create_ticket(
+                            ticket_type=ticket_type, vote=vote
+                        )
+                        quantity += 1
         return Response({})
 
 
