@@ -74,7 +74,7 @@ class PaymentIntentWebhook(APIView):
                     vote = None
                 transfer_amount = TicketType.objects.get(
                     slug=item['slug']
-                ).price * item['quantity'] * 15
+                ).price * item['quantity'] * 85
                 event_id = item['slug'].split('-')[0]
                 event = Event.objects.get(id=event_id)
                 promoter = Promoter.objects.get(slug=event.promoter.slug)
@@ -105,7 +105,7 @@ class ChargeWebhook(APIView):
             cart = ast.literal_eval(
                 request.data['data']['object']['description']
             )
-            total_charge = request.data['data']['object']['amount'] / 100
+            total_charge = request.data['data']['object']['amount'] / 15
             total_cart = 0
             for item in cart:
                 cost = TicketType.objects.get(
