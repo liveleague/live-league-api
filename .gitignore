@@ -115,3 +115,6 @@ sendgrid.env
 
 #db
 /app/db.sqlite3
+
+# Keys
+/app/keys.py
