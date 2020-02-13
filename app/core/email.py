@@ -6,6 +6,8 @@ from django.apps import apps
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
+from app.keys import SENDGRID_KEY
+
 
 class Email(object):
     """
@@ -13,10 +15,7 @@ class Email(object):
     to one user based on system events.
     """
     def __init__(self, template_name, to_emails, dynamic_template_data=None):
-        self.api_key = (
-            'SG.IjdbYqf4R0G3L5cHp1JxCQ.VhvjRtUSx'
-            'X5BAH39hKuVGpYi_lhpRZW-t9st6mxEGvA'
-        )
+        self.api_key = SENDGRID_KEY
         if template_name == 'welcome_user':
             self.from_email = 'welcome@liveleague.co.uk'
             self.template_id = 'd-02c660b9b23c45ed992fc601dec8fd3f'
